@@ -726,22 +726,6 @@ summary:focus-visible{outline:2px solid var(--amber);outline-offset:4px;border-r
     <span>Registered Electrical Engineer</span><span>DTI &amp; BIR registered</span><span>Philippine Electrical Code compliant</span><span>Tested &amp; documented turnover</span><span>1-year service warranty</span>
   </div></div>
 
-  <section class="band pg" id="explore">
-    <div class="wrap">
-      <div class="sec-head"><div><div class="eyebrow">Explore J&amp;A</div><h2>Find what you need</h2></div><p>Everything about our work, one tap away.</p></div>
-      <div class="explore">
-        <a href="/services"><span class="code">01</span><b>Our services</b><span>Installation, panel boards, testing, smart home, CCTV and more</span><i aria-hidden="true">→</i></a>
-        <a href="/how-we-work"><span class="code">02</span><b>How we work</b><span>Twelve documented steps, from first call to warranty</span><i aria-hidden="true">→</i></a>
-        <a href="/projects"><span class="code">03</span><b>Projects</b><span>Resorts, homes, an industrial plant and a school</span><i aria-hidden="true">→</i></a>
-        <a href="/client-portal"><span class="code">04</span><b>Client portal</b><span>Follow your project's progress, reports and billing</span><i aria-hidden="true">→</i></a>
-        <a href="/why-us"><span class="code">05</span><b>Why choose us</b><span>Engineer-led, code compliant, with a 1-year warranty</span><i aria-hidden="true">→</i></a>
-        <a href="/reviews"><span class="code">06</span><b>Reviews</b><span>What our clients say about working with J&amp;A</span><i aria-hidden="true">→</i></a>
-        <a href="/faq"><span class="code">07</span><b>FAQ</b><span>Answers about inspections, quotes and warranty</span><i aria-hidden="true">→</i></a>
-        <a href="/contact"><span class="code">08</span><b>Contact us</b><span>Request a free quote or message us any time</span><i aria-hidden="true">→</i></a>
-      </div>
-    </div>
-  </section>
-
   <section class="band pg" id="services">
     <div class="wrap">
       <div class="sec-head">
@@ -1524,7 +1508,7 @@ const show=id=>['site'].forEach(x=>$('#'+x).hidden=x!==id);
 const CLEAN_URLS=true;
 const SLUG={home:'',services:'services',process:'how-we-work',work:'projects',tracking:'client-portal',why:'why-us',reviews:'reviews',faq:'faq',contact:'contact'};
 const pageFromSlug=x=>{x=(x||'').replace(/^\/+|\/+$/g,'').replace(/\.html$/,'');if(!x)return 'home';const k=Object.keys(SLUG).find(k=>SLUG[k]===x);return k||(SLUG[x]!==undefined?x:null)};
-const SITE_PAGES={home:['top','strip','explore','nextstep'],services:['services','nextstep'],process:['process','nextstep'],work:['work','nextstep'],tracking:['tracking','nextstep'],why:['why','nextstep'],reviews:['reviews','nextstep'],faq:['faq','nextstep'],contact:['contact']};
+const SITE_PAGES={home:['top','strip','nextstep'],services:['services','nextstep'],process:['process','nextstep'],work:['work','nextstep'],tracking:['tracking','nextstep'],why:['why','nextstep'],reviews:['reviews','nextstep'],faq:['faq','nextstep'],contact:['contact']};
 const PAGE_TITLES={home:'',services:'Our services',process:'How we work',work:'Projects',tracking:'Client portal',why:'Why choose us',reviews:'Reviews',faq:'FAQ',contact:'Contact us'};
 let curPage='home';
 function navTo(pg){if(CLEAN_URLS){history.pushState(null,'','/'+SLUG[pg]);render();window.scrollTo(0,0)}else{location.hash=pg}}
