@@ -533,7 +533,7 @@ body:has(#toTop[hidden]) .fab-msg{bottom:calc(20px + env(safe-area-inset-bottom,
 .em-link{color:var(--text);overflow-wrap:anywhere;text-decoration:underline;text-decoration-color:var(--amber);text-underline-offset:3px}
 .foot a[href^="mailto:"]{color:inherit}
 .sent-box{border:1px solid var(--good);background:rgba(60,196,138,.08);border-radius:8px;padding:10px 12px;font-size:13.5px;display:grid;gap:8px;justify-items:start}
-.sent-box .mono{overflow-wrap:anywhere}
+.sent-box .mono{overflow-wrap:anywhere}.sent-box.sent-fail{border-color:var(--amber);background:rgba(250,168,25,.08)}.send-alt{display:flex;flex-wrap:wrap;gap:8px}
 .em-note{font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px;margin:0}
 
 
@@ -846,7 +846,7 @@ summary:focus-visible{outline:2px solid var(--amber);outline-offset:4px;border-r
         <label class="switch" style="font-size:13.5px;color:var(--muted)"><input type="checkbox" id="rvOk"> J&amp;A may show my name, city and review on this website.</label>
         <p id="rvErr" style="color:var(--bad);font-size:13px" hidden></p>
         <div id="rv-sent" class="sent-box" hidden></div>
-        <button class="btn primary" type="submit">Send review by email</button>
+        <button class="btn primary" type="submit">Submit review</button>
       </form>
     </div>
   </section>
@@ -896,7 +896,7 @@ summary:focus-visible{outline:2px solid var(--amber);outline-offset:4px;border-r
         <label class="f">Project details<textarea id="q-details" name="details" placeholder="e.g. 2-storey house, rewire 1st floor and add 3 aircon lines"></textarea></label>
         <p id="q-err" class="muted" style="color:var(--bad);font-size:13px" hidden></p>
         <div id="q-sent" class="sent-box" hidden></div>
-        <button class="btn primary" type="submit">Send request by email</button>
+        <button class="btn primary" type="submit">Send request</button>
         <p class="muted" style="font-size:12.5px">We never share your details.</p>
         <p class="muted" style="font-size:13px">Prefer to chat? <a href="https://m.me/61591375948574" target="_blank" rel="noopener">Message us on Messenger</a> or <a href="https://wa.me/639151120470?text=Hi%20J%26A%20Electrical%2C%20I%27d%20like%20to%20ask%20about%20your%20electrical%20services." target="_blank" rel="noopener">WhatsApp</a>.</p>
       </form>
@@ -1173,19 +1173,23 @@ function vSales(){
      <div class="acts">${li>0?`<button class="btn xs" data-act="leadmove" data-id="${x.id}" data-dir="-1" aria-label="Move back">←</button>`:''}${li<3?`<button class="btn xs" data-act="leadmove" data-id="${x.id}" data-dir="1">Move →</button>`:''}<button class="btn xs" data-act="estimate" data-id="${x.id}">Estimate</button>${k==='accepted'?`<button class="btn xs primary" data-act="convert" data-id="${x.id}">Create project</button>`:''}</div></div>`).join('')||'<div class="empty" style="padding:16px">No leads</div>'}
    </div>`}).join('')}</div>`;
 }
-function estimator(id){const l=S.leads.find(x=>x.id===id);
-  const rows=[['Wiring & conduit materials',1,Math.round((l.value||200000)*.38)],['Panel board & breakers',1,Math.round((l.value||200000)*.14)],['Lighting fixtures',1,Math.round((l.value||200000)*.12)],['Labor (crew-days)',Math.max(5,Math.round((l.value||200000)/40000)),2400],['Testing & documentation',1,8000]];
-  modal('Cost estimate · '+l.name,`<p class="muted" style="font-size:13px">Adjust quantities and unit costs. Markup and 12% VAT are applied to get the quotation price.</p>
-   <div class="tbl"><table class="t" id="estT"><thead><tr><th>Item</th><th class="r">Qty</th><th class="r">Unit cost</th><th class="r">Amount</th></tr></thead><tbody>
-   ${rows.map((r,i)=>`<tr><td><input id="en${i}" value="${esc(r[0])}"></td><td class="r"><input id="eq${i}" type="number" min="0" value="${r[1]}" style="width:70px;text-align:right" data-est></td><td class="r"><input id="ec${i}" type="number" min="0" value="${r[2]}" style="width:120px;text-align:right" data-est></td><td class="r num" id="ea${i}"></td></tr>`).join('')}
+function estRow(r){return `<tr><td><input class="e-n" value="${esc(r[0])}" placeholder="Item or work" aria-label="Item"></td><td class="r"><input class="e-q" type="number" min="0" step="any" value="${r[1]}" style="width:70px;text-align:right" data-est aria-label="Quantity"></td><td class="r"><input class="e-c" type="number" min="0" step="any" value="${r[2]}" style="width:120px;text-align:right" data-est aria-label="Unit cost"></td><td class="r num e-a"></td><td class="r" style="width:34px"><button type="button" class="btn xs ghost" data-act="estdel" aria-label="Remove this item" title="Remove">×</button></td></tr>`}
+function estimator(id){const l=S.leads.find(x=>x.id===id);const v=l.value||200000;
+  const rows=(l.est&&l.est.rows&&l.est.rows.length)?l.est.rows:[['Wiring & conduit materials',1,Math.round(v*.38)],['Panel board & breakers',1,Math.round(v*.14)],['Lighting fixtures',1,Math.round(v*.12)],['Labor (crew-days)',Math.max(5,Math.round(v/40000)),2400],['Testing & documentation',1,8000]];
+  const mk=l.est?l.est.mk:20, vat=l.est?l.est.vat:12;
+  modal('Cost estimate · '+l.name,`<p class="muted" style="font-size:13px">Adjust quantities and unit costs, add or remove items. Markup and VAT are applied to get the quotation price.</p>
+   <div class="tbl"><table class="t" id="estT"><thead><tr><th>Item</th><th class="r">Qty</th><th class="r">Unit cost</th><th class="r">Amount</th><th></th></tr></thead><tbody>
+   ${rows.map(estRow).join('')}
    </tbody></table></div>
-   <div class="fgrid"><label class="f">Markup %<input id="emk" type="number" value="20" data-est></label><label class="f">VAT<select id="evat" data-est><option value="12">12% VAT</option><option value="0">Non-VAT</option></select></label></div>
+   <div style="margin:10px 0 4px"><button type="button" class="btn sm" data-act="estadd">+ Add item</button></div>
+   <div class="fgrid"><label class="f">Markup %<input id="emk" type="number" value="${mk}" data-est></label><label class="f">VAT<select id="evat" data-est><option value="12" ${vat==12?'selected':''}>12% VAT</option><option value="0" ${vat==0?'selected':''}>Non-VAT</option></select></label></div>
    <div class="panel pad" id="etot"></div>`,`<button class="btn" data-act="close">Cancel</button><button class="btn primary" data-act="estsave" data-id="${id}">Save to lead</button>`);
   estCalc();}
-function estCalc(){let sub=0;for(let i=0;i<5;i++){const a=(+$('#eq'+i).value||0)*(+$('#ec'+i).value||0);sub+=a;$('#ea'+i).textContent=peso(a)}const mk=sub*(+$('#emk').value||0)/100,vat=(sub+mk)*(+$('#evat').value)/100;const tot=sub+mk+vat;$('#etot').innerHTML=`<div style="display:grid;grid-template-columns:1fr auto;gap:4px 16px;font-size:14px"><span class="muted">Direct cost</span><span class="num">${peso(sub)}</span><span class="muted">Markup</span><span class="num">${peso(mk)}</span><span class="muted">VAT</span><span class="num">${peso(vat)}</span><b>Quotation price</b><b class="num" style="color:var(--amber);font-size:20px">${peso(tot)}</b></div>`;$('#etot').dataset.total=Math.round(tot)}
+function estRows(){return [...document.querySelectorAll('#estT tbody tr')].map(tr=>[tr.querySelector('.e-n').value.trim(),+tr.querySelector('.e-q').value||0,+tr.querySelector('.e-c').value||0])}
+function estCalc(){let sub=0;document.querySelectorAll('#estT tbody tr').forEach(tr=>{const a=(+tr.querySelector('.e-q').value||0)*(+tr.querySelector('.e-c').value||0);sub+=a;tr.querySelector('.e-a').textContent=peso(a)});const mk=sub*(+$('#emk').value||0)/100,vat=(sub+mk)*(+$('#evat').value)/100;const tot=sub+mk+vat;$('#etot').innerHTML=`<div style="display:grid;grid-template-columns:1fr auto;gap:4px 16px;font-size:14px"><span class="muted">Direct cost</span><span class="num">${peso(sub)}</span><span class="muted">Markup</span><span class="num">${peso(mk)}</span><span class="muted">VAT</span><span class="num">${peso(vat)}</span><b>Quotation price</b><b class="num" style="color:var(--amber);font-size:20px">${peso(tot)}</b></div>`;$('#etot').dataset.total=Math.round(tot)}
 
 /* ---------- NEW PROJECT / LEAD ---------- */
-const TERM_PRESETS={std:['30 / 40 / 25 / 5 (standard)',[['Downpayment',30,'On approval'],['Progress billing',40,'50% installed'],['Final billing',25,'On turnover'],['Retention',5,'End of warranty']]],half:['50 / 50',[['Downpayment',50,'On approval'],['Final billing',50,'On turnover']]],dp70:['70 / 30',[['Downpayment',70,'On approval'],['Final billing',30,'On turnover']]],full:['100% on completion (small jobs)',[['Full payment',100,'On completion']]]};
+const TERM_PRESETS={std:['30 / 40 / 25 / 5 (standard)',[['Downpayment',30,'On approval'],['Progress billing',40,'50% installed'],['Final billing',25,'On turnover'],['Retention',5,'End of warranty']]],q30:['30 / 30 / 30 / 10',[['Downpayment',30,'On approval'],['Progress billing',30,'50% installed'],['Final billing',30,'On turnover'],['Retention',10,'End of warranty']]],half:['50 / 50',[['Downpayment',50,'On approval'],['Final billing',50,'On turnover']]],dp70:['70 / 30',[['Downpayment',70,'On approval'],['Final billing',30,'On turnover']]],full:['100% on completion (small jobs)',[['Full payment',100,'On completion']]]};
 const TEAM_PM=['Engr. John Burgos','Jun Abella'];
 const TEAM_ENG=['Engr. Ana Santos','Engr. John Burgos'];
 const teamEng=()=>[...new Set([...TEAM_ENG,...S.emps.map(e=>e.name)])];
@@ -1286,7 +1290,15 @@ const CO={name:'J&A Electrical Installation Services',rep:'Engr. John Michael Bu
 const JA_EMAIL=CO.email;
 const mailto=(to,subject,body,cc)=>'mailto:'+to+'?'+[cc&&'cc='+encodeURIComponent(cc),'subject='+encodeURIComponent(subject),'body='+encodeURIComponent(body)].filter(Boolean).join('&');
 function selectEmail(){const a=document.querySelector('.em-link');if(!a)return;const r=document.createRange();r.selectNodeContents(a);const sel=getSelection();sel.removeAllRanges();sel.addRange(r)}
-function sendBox(el,subject,body){const box=$(el);if(!box)return;box.innerHTML=`<span><b>Almost done:</b> your email app is opening with your message to <span class="mono">${esc(JA_EMAIL)}</span>. Press <b>Send</b> there.</span><span class="muted" style="font-size:13px">Didn't open? <a href="${esc(mailto(JA_EMAIL,subject,body))}">Try again</a>, message us on <a href="https://m.me/61591375948574" target="_blank" rel="noopener">Messenger</a>, or call 0915-112-0470.</span>`;box.hidden=false}
+const JA_API={"url": "https://zdogdfcawlandwllawex.supabase.co", "key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpkb2dkZmNhd2xhbmR3bGxhd2V4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ5Nzg4NjYsImV4cCI6MjExMDU1NDg2Nn0.Ey_BGsnOc5wlD81S8ivmFsCn56-Lym-6fB8Q3y9hK-4", "sheet": "https://script.google.com/macros/s/AKfycbzyHJ5oAFq-nvt9KWehqHfMxJqDg0W_2HMLjUJyj72IJIlYlS3ZYbRrVSS_fVMsMEO_/exec"};
+function sendToJA(fn,payload){return fetch(JA_API.url+'/rest/v1/rpc/'+fn,{method:'POST',headers:{'apikey':JA_API.key,'Authorization':'Bearer '+JA_API.key,'Content-Type':'application/json'},body:JSON.stringify({p:payload})})
+  .then(async r=>{if(!r.ok){let m='';try{m=(await r.json()).message||''}catch(_){};throw new Error(m||('Error '+r.status))}return r.json()})}
+function toSheet(x){if(!JA_API.sheet)return;try{fetch(JA_API.sheet,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(x),keepalive:true}).catch(()=>{})}catch(_){}}
+function okBox(el,html){const box=$(el);if(!box)return;box.className='sent-box';box.innerHTML=`<span>${html}</span>`;box.hidden=false;box.scrollIntoView({block:'nearest',behavior:'smooth'})}
+function failBox(el,body,e){const box=$(el);if(!box)return;const wa='https://wa.me/639151120470?text='+encodeURIComponent(body);const msg=(e&&e.message&&!/fetch|network|Error \d/i.test(e.message))?esc(e.message):'We could not send it from this page right now.';
+  box.className='sent-box sent-fail';box.innerHTML=`<span><b>Not sent yet.</b> ${msg} Please send it one of these ways. Your message is ready:</span>
+  <span class="send-alt"><a class="btn sm" style="background:#25D366;color:#04210f;border-color:#25D366" href="${wa}" target="_blank" rel="noopener">Send on WhatsApp</a><a class="btn sm btn-msg" href="https://m.me/61591375948574" target="_blank" rel="noopener">Messenger</a><a class="btn sm" href="tel:+639151120470">Call 0915-112-0470</a><button type="button" class="btn sm" data-copy>Copy message</button></span>`;
+  box.querySelector('[data-copy]').onclick=async ev=>{try{await navigator.clipboard.writeText(body);ev.target.textContent='Copied'}catch(_){ev.target.textContent='Copy failed'}};box.hidden=false;box.scrollIntoView({block:'nearest',behavior:'smooth'})}
 function sentBox(el,subject,body){const box=$(el);if(!box)return;box.innerHTML=`<span><b>Sent to J&amp;A.</b> Want it in our email inbox too? Tap below to send the details to <span class="mono">${esc(JA_EMAIL)}</span>.</span><a class="btn xs primary" href="${esc(mailto(JA_EMAIL,subject,body))}">Email it to J&amp;A</a>`;box.hidden=false}
 const C_STATUS={draft:['mute','Draft'],sent:['info','Sent to client'],signed:['good','Signed']};
 const DEFAULT_EXCL=['Civil, structural, painting and finishing works, unless stated in the quotation','Utility company application fees, deposits and meter charges','Government permit fees, unless stated in the quotation','Supply of appliances, equipment and fixtures not listed in the approved quotation','Work outside the approved quotation and drawings (handled as a change order)'];
@@ -1552,7 +1564,9 @@ const A={
   cpdf:d=>downloadContract(d.p),
   leadmove:d=>{const l=S.leads.find(x=>x.id===d.id);const i=LANES.findIndex(x=>x[0]===l.stage)+ +d.dir;if(i<0||i>3)return;l.stage=LANES[i][0];l.next={proposal:'Prepare quotation',negotiation:'Follow up on quotation',accepted:'Convert to project',discovery:'Schedule site visit'}[l.stage];save();rerender();toast(`${l.name} moved to ${LANES[i][1]}`)},
   estimate:d=>estimator(d.id),
-  estsave:d=>{const l=S.leads.find(x=>x.id===d.id);l.value=+$('#etot').dataset.total||0;if(l.stage==='discovery'){l.stage='proposal';l.next='Send quotation to client'}save();closeModal();rerender();toast('Estimate saved: '+peso(l.value))},
+  estadd:()=>{const tb=document.querySelector('#estT tbody');tb.insertAdjacentHTML('beforeend',estRow(['',1,0]));estCalc();const n=tb.lastElementChild.querySelector('.e-n');n&&n.focus()},
+  estdel:(d,el)=>{const tb=document.querySelector('#estT tbody');if(tb.children.length<=1){toast('An estimate needs at least one item');return}el.closest('tr').remove();estCalc()},
+  estsave:d=>{const l=S.leads.find(x=>x.id===d.id);l.est={rows:estRows().filter(r=>r[0]||r[1]*r[2]),mk:+$('#emk').value||0,vat:+$('#evat').value};l.value=+$('#etot').dataset.total||0;if(l.stage==='discovery'){l.stage='proposal';l.next='Send quotation to client'}save();closeModal();rerender();toast('Estimate saved: '+peso(l.value))},
   convert:d=>{const l=S.leads.find(x=>x.id===d.id);if(!l.value){toast('Add an estimate first');return}
     newProjectModal({client:l.name,contact:l.contact,phone:l.phone,name:l.service,site:l.city,type:l.type,value:l.value,lead:l.id})},
   newproj:()=>newProjectModal(),
@@ -1634,7 +1648,12 @@ document.addEventListener('submit',e=>{const f=e.target;const k=f.dataset.form;i
     if(!first||!/\d{7,}/.test(phone.replace(/\D/g,''))){err.textContent='Please add your first name and a phone number we can reach.';err.hidden=false;return}err.hidden=true;
     const last=$('#q-last').value.trim();S.leads.unshift({id:uid('l'),name:(first+' '+last).trim()+($('#q-type').value==='Residential'?' Residence':''),contact:(first+' '+last).trim(),phone,type:$('#q-type').value,city:$('#q-city').value,service:$('#q-svc').value+($('#q-details').value.trim()?': '+$('#q-details').value.trim().slice(0,80):''),value:0,stage:'discovery',next:'Call within the day',source:'Website'});
     const qb=['New ocular inspection request from the J&A website','','Name: '+(first+' '+last).trim(),'Phone: '+phone,'Email: '+($('#q-email').value.trim()||'-'),'Property type: '+$('#q-type').value,'City: '+$('#q-city').value,'Service needed: '+$('#q-svc').value,'Project details: '+($('#q-details').value.trim()||'-')].join('\n');
-    const subj='Ocular inspection request: '+(first+' '+last).trim();sendBox('#q-sent',subj,qb);f.reset();location.href=mailto(JA_EMAIL,subj,qb)}
+    const btn=f.querySelector('button[type=submit]');btn.disabled=true;btn.textContent='Sending…';$('#q-sent').hidden=true;
+    const qd={first,last,phone,email:$('#q-email').value.trim(),type:$('#q-type').value,city:$('#q-city').value,service:$('#q-svc').value,details:$('#q-details').value.trim()};toSheet(Object.assign({form:'quote'},qd));
+    sendToJA('submit_quote',qd)
+      .then(()=>{okBox('#q-sent','<b>Request received!</b> Thank you, '+esc(first)+'. J&amp;A will call you on <b>'+esc(phone)+'</b> within the day (8 AM – 8 PM).');f.reset();toast('Request sent to J&A')})
+      .catch(e=>failBox('#q-sent',qb,e))
+      .finally(()=>{btn.disabled=false;btn.textContent='Send request'})}
   if(k==='report'){const p=P($('#rpProj').value);const ti=+$('#rpTask').value;p.tasks[ti].progress=Math.max(0,Math.min(100,+$('#rpProg').value||0));
     const mi=$('#rpMat').value,q=Math.max(0,+$('#rpQty').value||0);let note='';if(mi!==''&&q>0){const b=p.bom[+mi];b.installed+=q;b.onsite=Math.max(0,b.onsite-q);note=` · ${q} ${b.unit} ${b.item} installed`}
     const files=$('#rpPhotos').files.length;
@@ -1651,7 +1670,12 @@ document.addEventListener('submit',e=>{const f=e.target;const k=f.dataset.form;i
     if(miss.length){err.textContent='Please add '+miss.join(', ')+'.';err.hidden=false;return}err.hidden=true;
     S.reviews.push({id:uid('rv'),name:name.slice(0,60),city:$('#rvCity').value.trim().slice(0,40),service:$('#rvSvc').value,rating:rvPick,text:text.slice(0,800),date:D(0),status:'pending'});
     const rr=S.reviews[S.reviews.length-1];save();f.reset();rvPick=0;document.querySelectorAll('.rv-stars button').forEach(b=>b.classList.remove('on'));
-    S.reviews.pop();sendBox('#rv-sent','New website review from '+rr.name,['New review on the J&A website (waiting for approval)','','Name: '+rr.name,'City: '+(rr.city||'-'),'Service: '+rr.service,'Rating: '+rr.rating+' of 5','','"'+rr.text+'"','','J&A may show this review on jandaelectricalservices.com.'].join('\n'));location.href=mailto(JA_EMAIL,'New website review from '+rr.name,['Name: '+rr.name,'City: '+(rr.city||'-'),'Service: '+rr.service,'Rating: '+rr.rating+' of 5','','"'+rr.text+'"','','J&A may show this review on jandaelectricalservices.com.'].join('\n'))}
+    S.reviews.pop();const rb=['New review for J&A','','Name: '+rr.name,'City: '+(rr.city||'-'),'Service: '+rr.service,'Rating: '+rr.rating+' of 5','','"'+rr.text+'"'].join('\n');
+    const btn=f.querySelector('button[type=submit]');btn.disabled=true;btn.textContent='Sending…';$('#rv-sent').hidden=true;
+    sendToJA('submit_review',{name:rr.name,city:rr.city,service:rr.service,rating:rr.rating,text:rr.text})
+      .then(()=>{okBox('#rv-sent','<b>Thank you, '+esc(rr.name)+'!</b> Your review was sent to J&amp;A. It appears here after we confirm you are one of our clients.');toast('Review sent')})
+      .catch(e=>failBox('#rv-sent',rb,e))
+      .finally(()=>{btn.disabled=false;btn.textContent='Submit review'})}
   if(k==='feedback'){const p=P(f.dataset.p);S.feedback.push({pid:p.id,client:p.client,rating:UI.ratePick,text:$('#fbText').value.trim()||'(no comment)',date:D(0)});save();renderPortal();toast('Thank you for your feedback!')}
 });
 

@@ -17,7 +17,7 @@
 .tm-in{width:100%;min-width:120px}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script>window.JA_LIVE={"url": "https://zdogdfcawlandwllawex.supabase.co", "key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpkb2dkZmNhd2xhbmR3bGxhd2V4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ5Nzg4NjYsImV4cCI6MjExMDU1NDg2Nn0.Ey_BGsnOc5wlD81S8ivmFsCn56-Lym-6fB8Q3y9hK-4"};
+<script>window.JA_LIVE={"url": "https://zdogdfcawlandwllawex.supabase.co", "key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpkb2dkZmNhd2xhbmR3bGxhd2V4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ5Nzg4NjYsImV4cCI6MjExMDU1NDg2Nn0.Ey_BGsnOc5wlD81S8ivmFsCn56-Lym-6fB8Q3y9hK-4", "sheet": "https://script.google.com/macros/s/AKfycbzyHJ5oAFq-nvt9KWehqHfMxJqDg0W_2HMLjUJyj72IJIlYlS3ZYbRrVSS_fVMsMEO_/exec"};
 window.OFFICE_ROUTE={
   get(){const p=location.pathname.replace(/^\/office(\.html)?\/?/,'').replace(/\/+$/,'');return p?'#'+p:''},
   set(h){h=String(h).replace(/^#/,'');const url='/office'+(h?'/'+h:'');if(location.pathname!==url)history.pushState(null,'',url);window.dispatchEvent(new HashChangeEvent('hashchange'))}
@@ -1175,19 +1175,23 @@ function vSales(){
      <div class="acts">${li>0?`<button class="btn xs" data-act="leadmove" data-id="${x.id}" data-dir="-1" aria-label="Move back">←</button>`:''}${li<3?`<button class="btn xs" data-act="leadmove" data-id="${x.id}" data-dir="1">Move →</button>`:''}<button class="btn xs" data-act="estimate" data-id="${x.id}">Estimate</button>${k==='accepted'?`<button class="btn xs primary" data-act="convert" data-id="${x.id}">Create project</button>`:''}</div></div>`).join('')||'<div class="empty" style="padding:16px">No leads</div>'}
    </div>`}).join('')}</div>`;
 }
-function estimator(id){const l=S.leads.find(x=>x.id===id);
-  const rows=[['Wiring & conduit materials',1,Math.round((l.value||200000)*.38)],['Panel board & breakers',1,Math.round((l.value||200000)*.14)],['Lighting fixtures',1,Math.round((l.value||200000)*.12)],['Labor (crew-days)',Math.max(5,Math.round((l.value||200000)/40000)),2400],['Testing & documentation',1,8000]];
-  modal('Cost estimate · '+l.name,`<p class="muted" style="font-size:13px">Adjust quantities and unit costs. Markup and 12% VAT are applied to get the quotation price.</p>
-   <div class="tbl"><table class="t" id="estT"><thead><tr><th>Item</th><th class="r">Qty</th><th class="r">Unit cost</th><th class="r">Amount</th></tr></thead><tbody>
-   ${rows.map((r,i)=>`<tr><td><input id="en${i}" value="${esc(r[0])}"></td><td class="r"><input id="eq${i}" type="number" min="0" value="${r[1]}" style="width:70px;text-align:right" data-est></td><td class="r"><input id="ec${i}" type="number" min="0" value="${r[2]}" style="width:120px;text-align:right" data-est></td><td class="r num" id="ea${i}"></td></tr>`).join('')}
+function estRow(r){return `<tr><td><input class="e-n" value="${esc(r[0])}" placeholder="Item or work" aria-label="Item"></td><td class="r"><input class="e-q" type="number" min="0" step="any" value="${r[1]}" style="width:70px;text-align:right" data-est aria-label="Quantity"></td><td class="r"><input class="e-c" type="number" min="0" step="any" value="${r[2]}" style="width:120px;text-align:right" data-est aria-label="Unit cost"></td><td class="r num e-a"></td><td class="r" style="width:34px"><button type="button" class="btn xs ghost" data-act="estdel" aria-label="Remove this item" title="Remove">×</button></td></tr>`}
+function estimator(id){const l=S.leads.find(x=>x.id===id);const v=l.value||200000;
+  const rows=(l.est&&l.est.rows&&l.est.rows.length)?l.est.rows:[['Wiring & conduit materials',1,Math.round(v*.38)],['Panel board & breakers',1,Math.round(v*.14)],['Lighting fixtures',1,Math.round(v*.12)],['Labor (crew-days)',Math.max(5,Math.round(v/40000)),2400],['Testing & documentation',1,8000]];
+  const mk=l.est?l.est.mk:20, vat=l.est?l.est.vat:12;
+  modal('Cost estimate · '+l.name,`<p class="muted" style="font-size:13px">Adjust quantities and unit costs, add or remove items. Markup and VAT are applied to get the quotation price.</p>
+   <div class="tbl"><table class="t" id="estT"><thead><tr><th>Item</th><th class="r">Qty</th><th class="r">Unit cost</th><th class="r">Amount</th><th></th></tr></thead><tbody>
+   ${rows.map(estRow).join('')}
    </tbody></table></div>
-   <div class="fgrid"><label class="f">Markup %<input id="emk" type="number" value="20" data-est></label><label class="f">VAT<select id="evat" data-est><option value="12">12% VAT</option><option value="0">Non-VAT</option></select></label></div>
+   <div style="margin:10px 0 4px"><button type="button" class="btn sm" data-act="estadd">+ Add item</button></div>
+   <div class="fgrid"><label class="f">Markup %<input id="emk" type="number" value="${mk}" data-est></label><label class="f">VAT<select id="evat" data-est><option value="12" ${vat==12?'selected':''}>12% VAT</option><option value="0" ${vat==0?'selected':''}>Non-VAT</option></select></label></div>
    <div class="panel pad" id="etot"></div>`,`<button class="btn" data-act="close">Cancel</button><button class="btn primary" data-act="estsave" data-id="${id}">Save to lead</button>`);
   estCalc();}
-function estCalc(){let sub=0;for(let i=0;i<5;i++){const a=(+$('#eq'+i).value||0)*(+$('#ec'+i).value||0);sub+=a;$('#ea'+i).textContent=peso(a)}const mk=sub*(+$('#emk').value||0)/100,vat=(sub+mk)*(+$('#evat').value)/100;const tot=sub+mk+vat;$('#etot').innerHTML=`<div style="display:grid;grid-template-columns:1fr auto;gap:4px 16px;font-size:14px"><span class="muted">Direct cost</span><span class="num">${peso(sub)}</span><span class="muted">Markup</span><span class="num">${peso(mk)}</span><span class="muted">VAT</span><span class="num">${peso(vat)}</span><b>Quotation price</b><b class="num" style="color:var(--amber);font-size:20px">${peso(tot)}</b></div>`;$('#etot').dataset.total=Math.round(tot)}
+function estRows(){return [...document.querySelectorAll('#estT tbody tr')].map(tr=>[tr.querySelector('.e-n').value.trim(),+tr.querySelector('.e-q').value||0,+tr.querySelector('.e-c').value||0])}
+function estCalc(){let sub=0;document.querySelectorAll('#estT tbody tr').forEach(tr=>{const a=(+tr.querySelector('.e-q').value||0)*(+tr.querySelector('.e-c').value||0);sub+=a;tr.querySelector('.e-a').textContent=peso(a)});const mk=sub*(+$('#emk').value||0)/100,vat=(sub+mk)*(+$('#evat').value)/100;const tot=sub+mk+vat;$('#etot').innerHTML=`<div style="display:grid;grid-template-columns:1fr auto;gap:4px 16px;font-size:14px"><span class="muted">Direct cost</span><span class="num">${peso(sub)}</span><span class="muted">Markup</span><span class="num">${peso(mk)}</span><span class="muted">VAT</span><span class="num">${peso(vat)}</span><b>Quotation price</b><b class="num" style="color:var(--amber);font-size:20px">${peso(tot)}</b></div>`;$('#etot').dataset.total=Math.round(tot)}
 
 /* ---------- NEW PROJECT / LEAD ---------- */
-const TERM_PRESETS={std:['30 / 40 / 25 / 5 (standard)',[['Downpayment',30,'On approval'],['Progress billing',40,'50% installed'],['Final billing',25,'On turnover'],['Retention',5,'End of warranty']]],half:['50 / 50',[['Downpayment',50,'On approval'],['Final billing',50,'On turnover']]],dp70:['70 / 30',[['Downpayment',70,'On approval'],['Final billing',30,'On turnover']]],full:['100% on completion (small jobs)',[['Full payment',100,'On completion']]]};
+const TERM_PRESETS={std:['30 / 40 / 25 / 5 (standard)',[['Downpayment',30,'On approval'],['Progress billing',40,'50% installed'],['Final billing',25,'On turnover'],['Retention',5,'End of warranty']]],q30:['30 / 30 / 30 / 10',[['Downpayment',30,'On approval'],['Progress billing',30,'50% installed'],['Final billing',30,'On turnover'],['Retention',10,'End of warranty']]],half:['50 / 50',[['Downpayment',50,'On approval'],['Final billing',50,'On turnover']]],dp70:['70 / 30',[['Downpayment',70,'On approval'],['Final billing',30,'On turnover']]],full:['100% on completion (small jobs)',[['Full payment',100,'On completion']]]};
 const TEAM_PM=['Engr. John Burgos','Jun Abella'];
 const TEAM_ENG=['Engr. Ana Santos','Engr. John Burgos'];
 const teamEng=()=>[...new Set([...TEAM_ENG,...S.emps.map(e=>e.name)])];
@@ -1545,7 +1549,9 @@ const A={
   cpdf:d=>downloadContract(d.p),
   leadmove:d=>{const l=S.leads.find(x=>x.id===d.id);const i=LANES.findIndex(x=>x[0]===l.stage)+ +d.dir;if(i<0||i>3)return;l.stage=LANES[i][0];l.next={proposal:'Prepare quotation',negotiation:'Follow up on quotation',accepted:'Convert to project',discovery:'Schedule site visit'}[l.stage];save();rerender();toast(`${l.name} moved to ${LANES[i][1]}`)},
   estimate:d=>estimator(d.id),
-  estsave:d=>{const l=S.leads.find(x=>x.id===d.id);l.value=+$('#etot').dataset.total||0;if(l.stage==='discovery'){l.stage='proposal';l.next='Send quotation to client'}save();closeModal();rerender();toast('Estimate saved: '+peso(l.value))},
+  estadd:()=>{const tb=document.querySelector('#estT tbody');tb.insertAdjacentHTML('beforeend',estRow(['',1,0]));estCalc();const n=tb.lastElementChild.querySelector('.e-n');n&&n.focus()},
+  estdel:(d,el)=>{const tb=document.querySelector('#estT tbody');if(tb.children.length<=1){toast('An estimate needs at least one item');return}el.closest('tr').remove();estCalc()},
+  estsave:d=>{const l=S.leads.find(x=>x.id===d.id);l.est={rows:estRows().filter(r=>r[0]||r[1]*r[2]),mk:+$('#emk').value||0,vat:+$('#evat').value};l.value=+$('#etot').dataset.total||0;if(l.stage==='discovery'){l.stage='proposal';l.next='Send quotation to client'}save();closeModal();rerender();toast('Estimate saved: '+peso(l.value))},
   convert:d=>{const l=S.leads.find(x=>x.id===d.id);if(!l.value){toast('Add an estimate first');return}
     newProjectModal({client:l.name,contact:l.contact,phone:l.phone,name:l.service,site:l.city,type:l.type,value:l.value,lead:l.id})},
   newproj:()=>newProjectModal(),
