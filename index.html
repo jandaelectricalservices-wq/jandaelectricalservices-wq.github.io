@@ -597,10 +597,11 @@ a.brand{text-decoration:none}
 .drawer .lnk:hover,.drawer .lnk:focus-visible{background:var(--bg);border-left-color:var(--amber);color:var(--amber)}
 .dr-cta{display:grid;gap:10px;margin-top:auto;padding-top:18px}
 /* ---- fold boxes ---- */
+.svc summary,.phase summary{pointer-events:none;cursor:default}
 .fold-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:-6px 0 14px;color:var(--muted);font-size:14px}
 .fold-all{background:none;border:1px solid var(--line);color:var(--text);border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer;white-space:nowrap}
 .fold-all:hover{border-color:var(--amber);color:var(--amber)}
-.svc{align-items:start;gap:12px;background:none;border:0;border-radius:0;overflow:visible}
+.svc{align-items:stretch;gap:12px;background:none;border:0;border-radius:0;overflow:visible}
 .svc details{background:var(--bg);padding:20px 22px;min-width:0;border:1px solid var(--line);border-radius:12px}
 .svc details:hover{background:var(--panel)}
 .svc details[open]{background:var(--panel)}
@@ -732,7 +733,6 @@ summary:focus-visible{outline:2px solid var(--amber);outline-offset:4px;border-r
         <div><div class="eyebrow">Our services</div><h2>Electrical services for every need</h2></div>
         <p>Professional electrical solutions for residential, commercial, school, office and other establishment requirements.</p>
       </div>
-      <div class="fold-bar"><span>Tap a service to see everything it covers.</span><button type="button" class="fold-all" data-act="foldall" data-in="svcGrid" aria-pressed="false">Show all</button></div>
       <div class="svc" id="svcGrid"></div>
       <div class="warranty-band"><b>1-year service warranty</b><span>On covered workmanship for added peace of mind, subject to applicable terms and conditions.</span></div>
       <div class="sectors" aria-label="Who we work for">
@@ -747,7 +747,6 @@ summary:focus-visible{outline:2px solid var(--amber);outline-offset:4px;border-r
         <div><div class="eyebrow">How we work</div><h2>Twelve steps, from first call to warranty</h2></div>
         <p>Every project follows the same documented process. You always know what stage you're in, what's next, and what you owe.</p>
       </div>
-      <div class="fold-bar"><span>Tap a stage to see its steps.</span><button type="button" class="fold-all" data-act="foldall" data-in="phases" aria-pressed="false">Show all</button></div>
       <div class="phases" id="phases"></div>
     </div>
   </section>
@@ -1051,7 +1050,7 @@ function closeModal(){$('#modal').hidden=true;$('#modalCard').innerHTML=''}
 
 /* ---------- public static bits ---------- */
 $('#yr').textContent=TODAY.getFullYear();
-$('#phases').innerHTML=PHASES.map(([n,a,b])=>`<details class="phase"><summary><h3>${n}</h3><span class="fold-n">Steps ${String(a+1).padStart(2,'0')}–${String(b).padStart(2,'0')} <i aria-hidden="true">+</i></span></summary><ol>${STEPS.slice(a,b).map((s,i)=>`<li><b>${String(a+i+1).padStart(2,'0')}</b><div><strong>${esc(s)}</strong><span>${esc(STEP_NOTE[a+i])}</span></div></li>`).join('')}</ol></details>`).join('');
+$('#phases').innerHTML=PHASES.map(([n,a,b])=>`<details class="phase" open><summary><h3>${n}</h3><span class="fold-n">Steps ${String(a+1).padStart(2,'0')}–${String(b).padStart(2,'0')}</span></summary><ol>${STEPS.slice(a,b).map((s,i)=>`<li><b>${String(a+i+1).padStart(2,'0')}</b><div><strong>${esc(s)}</strong><span>${esc(STEP_NOTE[a+i])}</span></div></li>`).join('')}</ol></details>`).join('');
 const SERVICES=[
  ['INS','Electrical installation services',['Residential electrical wiring','Commercial electrical wiring','New electrical installation','Electrical renovation and rewiring','Lighting and power installation','Outlet and switch installation','Dedicated power outlet installation','Air conditioning power supply','EV charger installation','Electrical service entrance installation']],
  ['PNL','Panel board and distribution system',['Panel board installation','Panel board upgrade and replacement','Circuit breaker installation and replacement','Main breaker installation','Electrical load balancing','Electrical distribution system installation','Meter base and meter center installation','NEMA 3R enclosure installation']],
@@ -1062,7 +1061,7 @@ const SERVICES=[
  ['ENG','Electrical engineering and consultancy',['Electrical engineering consultation','Electrical load calculation','Electrical system evaluation','Technical inspection and recommendations','Electrical plan preparation and related engineering services, subject to applicable professional requirements']],
  ['PMS','Maintenance and after-service support',['Scheduled electrical maintenance','Preventive maintenance','Electrical system condition assessment','Warranty inspection and assessment','After-service technical support']]
 ];
-$('#svcGrid').innerHTML=SERVICES.map(([c,h,items])=>`<details><summary><span class="code">${c}</span><h3>${esc(h)}</h3><span class="fold-n">${items.length} services <i aria-hidden="true">+</i></span></summary><ul>${items.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></details>`).join('');
+$('#svcGrid').innerHTML=SERVICES.map(([c,h,items])=>`<details open><summary><span class="code">${c}</span><h3>${esc(h)}</h3><span class="fold-n">${items.length} services</span></summary><ul>${items.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></details>`).join('');
 const PROJECTS=[
  {n:'01',name:'Emon Pulo Beach Resort',sector:'resort',tag:'Resort / hospitality',loc:'',img:'01-emon-pulo',w:1400,h:788,scope:'Hotel electrical wiring, load calculation, panel board installation, lighting and power wiring, and solar termination.',cap:'Guest room'},
  {n:'02',name:'Caylabne Beach Resort',sector:'resort',tag:'Resort / hospitality',loc:'',img:'02-caylabne',w:1400,h:934,scope:'Dome hotel electrical wiring, load calculation, panel board installation, and lighting and power wiring.',cap:'Resort accommodation and pathway'},
