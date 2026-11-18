@@ -17,7 +17,14 @@
 .tm-in{width:100%;min-width:120px}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script>window.JA_LIVE={"url": "https://zdogdfcawlandwllawex.supabase.co", "key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpkb2dkZmNhd2xhbmR3bGxhd2V4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ5Nzg4NjYsImV4cCI6MjExMDU1NDg2Nn0.Ey_BGsnOc5wlD81S8ivmFsCn56-Lym-6fB8Q3y9hK-4"};</script>
+<script>window.JA_LIVE={"url": "https://zdogdfcawlandwllawex.supabase.co", "key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpkb2dkZmNhd2xhbmR3bGxhd2V4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ5Nzg4NjYsImV4cCI6MjExMDU1NDg2Nn0.Ey_BGsnOc5wlD81S8ivmFsCn56-Lym-6fB8Q3y9hK-4"};
+window.OFFICE_ROUTE={
+  get(){const p=location.pathname.replace(/^\/office(\.html)?\/?/,'').replace(/\/+$/,'');return p?'#'+p:''},
+  set(h){h=String(h).replace(/^#/,'');const url='/office'+(h?'/'+h:'');if(location.pathname!==url)history.pushState(null,'',url);window.dispatchEvent(new HashChangeEvent('hashchange'))}
+};
+(function(){var h=location.hash.slice(1);if(h&&h.indexOf('=')<0){history.replaceState(null,'','/office/'+h)}})();
+window.addEventListener('popstate',function(){window.dispatchEvent(new HashChangeEvent('hashchange'))});
+</script>
 </head>
 <body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -105,7 +112,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .schedule .load i{display:block;height:100%;width:78%;background:linear-gradient(90deg,var(--good),var(--amber))}
 
 .strip{border-bottom:1px solid var(--line);background:var(--bg2)}
-.strip .wrap{display:flex;flex-wrap:wrap;gap:12px 36px;padding-block:18px;font-family:var(--f-mono);font-size:12.5px;color:var(--muted);letter-spacing:.04em}
+.strip .wrap{display:flex;flex-wrap:wrap;gap:12px 32px;padding-block:18px;font-family:var(--f-body);font-size:14.5px;font-weight:500;color:var(--muted)}
 .strip span::before{content:"✓ ";color:var(--amber)}
 
 section.band{padding-block:88px}
@@ -597,10 +604,11 @@ a.brand{text-decoration:none}
 .drawer .lnk:hover,.drawer .lnk:focus-visible{background:var(--bg);border-left-color:var(--amber);color:var(--amber)}
 .dr-cta{display:grid;gap:10px;margin-top:auto;padding-top:18px}
 /* ---- fold boxes ---- */
+.svc summary,.phase summary{pointer-events:none;cursor:default}
 .fold-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:-6px 0 14px;color:var(--muted);font-size:14px}
 .fold-all{background:none;border:1px solid var(--line);color:var(--text);border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer;white-space:nowrap}
 .fold-all:hover{border-color:var(--amber);color:var(--amber)}
-.svc{align-items:start;gap:12px;background:none;border:0;border-radius:0;overflow:visible}
+.svc{align-items:stretch;gap:12px;background:none;border:0;border-radius:0;overflow:visible}
 .svc details{background:var(--bg);padding:20px 22px;min-width:0;border:1px solid var(--line);border-radius:12px}
 .svc details:hover{background:var(--panel)}
 .svc details[open]{background:var(--panel)}
@@ -639,10 +647,11 @@ summary:focus-visible{outline:2px solid var(--amber);outline-offset:4px;border-r
 <div id="site">
   <header class="top">
     <div class="wrap">
-      <a class="brand" href="#home" aria-label="J and A Electrical home">
+      <a class="brand" href="/" aria-label="J and A Electrical home">
         <span class="hdr-badge"><span class="logo-full hdr-logo" role="img" aria-label="J &amp; A Electrical Services logo"></span></span>
       </a>
       <nav class="navlinks">
+        <a href="/" data-pg="home">Home</a>
         <a href="#services" data-pg="services">Services</a>
         <a href="#process" data-pg="process">How we work</a>
         <a href="#work" data-pg="work">Projects</a>
@@ -652,7 +661,7 @@ summary:focus-visible{outline:2px solid var(--amber);outline-offset:4px;border-r
         <a href="#faq" data-pg="faq">FAQ</a>
       </nav>
       <div class="cta">
-        <a class="btn ghost sm" href="#login">Sign in</a>
+        <a class="btn ghost sm" href="/office">Sign in</a>
         <a class="btn primary sm" href="#contact" data-pg="contact">Get a quote</a>
         <button class="menu-btn" type="button" data-act="menu" aria-label="Open menu" aria-expanded="false" aria-controls="drawer"><span></span><span></span><span></span></button>
       </div>
@@ -663,7 +672,7 @@ summary:focus-visible{outline:2px solid var(--amber);outline-offset:4px;border-r
     <div class="scrim" data-act="menuclose"></div>
     <nav aria-label="Site menu">
       <div class="dr-head"><span class="hdr-badge"><span class="logo-full hdr-logo" role="img" aria-label="J &amp; A Electrical Services logo"></span></span><button class="dr-x" type="button" data-act="menuclose" aria-label="Close menu">×</button></div>
-      <a class="lnk" href="#home" data-pg="home">Home</a>
+      <a class="lnk" href="/" data-pg="home">Home</a>
       <a class="lnk" href="#services" data-pg="services">Our services</a>
       <a class="lnk" href="#process" data-pg="process">How we work</a>
       <a class="lnk" href="#work" data-pg="work">Projects</a>
@@ -685,14 +694,13 @@ summary:focus-visible{outline:2px solid var(--amber);outline-offset:4px;border-r
         <div class="actions">
           <button class="btn primary" data-act="scroll" data-to="contact">Request a free quote</button>
           <a class="btn btn-msg" href="https://m.me/61591375948574" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2C6.4 2 2 6.1 2 11.6c0 2.9 1.2 5.4 3.2 7.1V22l3-1.7c1.2.3 2.4.5 3.8.5 5.6 0 10-4.1 10-9.6S17.6 2 12 2zm1 12.9-2.6-2.7-5 2.7 5.5-5.8 2.6 2.7 4.9-2.7-5.4 5.8z"/></svg>Message us</a>
-          <a class="btn" href="#login">Track my project</a>
+          <a class="btn" href="/office">Track my project</a>
           <span class="phone">Call / text 0915-112-0470</span>
         </div>
         <div class="stats">
           <div><b>1 Year</b><span>Service warranty</span></div>
           <div><b>11+</b><span>Featured projects</span></div>
           <div><b>5</b><span>Sectors served</span></div>
-          <div><b>Free</b><span>Ocular inspection*</span></div>
         </div>
       </div>
       <div class="hero-visual">
@@ -721,29 +729,12 @@ summary:focus-visible{outline:2px solid var(--amber);outline-offset:4px;border-r
     <span>Registered Electrical Engineer</span><span>DTI &amp; BIR registered</span><span>Philippine Electrical Code compliant</span><span>Tested &amp; documented turnover</span><span>1-year service warranty</span>
   </div></div>
 
-  <section class="band pg" id="explore">
-    <div class="wrap">
-      <div class="sec-head"><div><div class="eyebrow">Explore J&amp;A</div><h2>Find what you need</h2></div><p>Everything about our work, one tap away.</p></div>
-      <div class="explore">
-        <a href="#services"><span class="code">01</span><b>Our services</b><span>Installation, panel boards, testing, smart home, CCTV and more</span><i aria-hidden="true">→</i></a>
-        <a href="#process"><span class="code">02</span><b>How we work</b><span>Twelve documented steps, from first call to warranty</span><i aria-hidden="true">→</i></a>
-        <a href="#work"><span class="code">03</span><b>Projects</b><span>Resorts, homes, an industrial plant and a school</span><i aria-hidden="true">→</i></a>
-        <a href="#tracking"><span class="code">04</span><b>Client portal</b><span>Follow your project's progress, reports and billing</span><i aria-hidden="true">→</i></a>
-        <a href="#why"><span class="code">05</span><b>Why choose us</b><span>Engineer-led, code compliant, with a 1-year warranty</span><i aria-hidden="true">→</i></a>
-        <a href="#reviews"><span class="code">06</span><b>Reviews</b><span>What our clients say about working with J&amp;A</span><i aria-hidden="true">→</i></a>
-        <a href="#faq"><span class="code">07</span><b>FAQ</b><span>Answers about inspections, quotes and warranty</span><i aria-hidden="true">→</i></a>
-        <a href="#contact"><span class="code">08</span><b>Contact us</b><span>Request a free quote or message us any time</span><i aria-hidden="true">→</i></a>
-      </div>
-    </div>
-  </section>
-
   <section class="band pg" id="services">
     <div class="wrap">
       <div class="sec-head">
         <div><div class="eyebrow">Our services</div><h2>Electrical services for every need</h2></div>
         <p>Professional electrical solutions for residential, commercial, school, office and other establishment requirements.</p>
       </div>
-      <div class="fold-bar"><span>Tap a service to see everything it covers.</span><button type="button" class="fold-all" data-act="foldall" data-in="svcGrid" aria-pressed="false">Show all</button></div>
       <div class="svc" id="svcGrid"></div>
       <div class="warranty-band"><b>1-year service warranty</b><span>On covered workmanship for added peace of mind, subject to applicable terms and conditions.</span></div>
       <div class="sectors" aria-label="Who we work for">
@@ -758,7 +749,6 @@ summary:focus-visible{outline:2px solid var(--amber);outline-offset:4px;border-r
         <div><div class="eyebrow">How we work</div><h2>Twelve steps, from first call to warranty</h2></div>
         <p>Every project follows the same documented process. You always know what stage you're in, what's next, and what you owe.</p>
       </div>
-      <div class="fold-bar"><span>Tap a stage to see its steps.</span><button type="button" class="fold-all" data-act="foldall" data-in="phases" aria-pressed="false">Show all</button></div>
       <div class="phases" id="phases"></div>
     </div>
   </section>
@@ -791,7 +781,7 @@ summary:focus-visible{outline:2px solid var(--amber);outline-offset:4px;border-r
           <li><i>4</i><div><b>Billing in the open</b><span>Payment terms, statements and your balance, always up to date.</span></div></li>
           <li><i>5</i><div><b>Warranty &amp; service requests</b><span>Report an issue after turnover and track the response.</span></div></li>
         </ul>
-        <a class="btn primary" href="#login">Sign in to the client portal</a>
+        <a class="btn primary" href="/office">Sign in to the client portal</a>
       </div>
       <div class="mock" aria-hidden="true">
         <div class="row"><b>Kitchen &amp; Dining Power Upgrade</b><span class="pill amber">Installation</span></div>
@@ -868,7 +858,7 @@ summary:focus-visible{outline:2px solid var(--amber);outline-offset:4px;border-r
     <div class="wrap">
       <div class="sec-head"><div><div class="eyebrow">FAQ</div><h2>Common questions</h2></div><p>Still unsure? Call or text us and we'll walk you through it.</p></div>
       <div class="faq">
-        <details open><summary>Is the ocular inspection really free?</summary><p>Yes, in selected areas. Our engineer visits, checks your existing panel and loads, and gives you an itemized quotation with no obligation.</p></details>
+        <details open><summary>Do you inspect the site before quoting?</summary><p>Yes. Our engineer visits, checks your existing panel and loads, and gives you an itemized quotation with no obligation.</p></details>
         <details><summary>Who handles the engineering side?</summary><p>J&amp;A is powered by a Registered Electrical Engineer, Engr. John Michael Burgos. We do load calculations, system evaluations and technical inspections, and can prepare electrical plans and related engineering services subject to applicable professional requirements.</p></details>
         <details><summary>Do you install CCTV and smart switches too?</summary><p>Yes. We install CCTV cameras, cabling and DVR/NVR systems, and smart, WiFi and touch-panel switches with lighting controls and automation.</p></details>
         <details><summary>How are payments structured?</summary><p>Most projects use a downpayment on approval, a progress billing during installation, final billing on turnover, and a small retention released at the end of the warranty period. Every term is shown in your client portal.</p></details>
@@ -910,7 +900,7 @@ summary:focus-visible{outline:2px solid var(--amber);outline-offset:4px;border-r
         <p id="q-err" class="muted" style="color:var(--bad);font-size:13px" hidden></p>
         <div id="q-sent" class="sent-box" hidden></div>
         <button class="btn primary" type="submit">Send request</button>
-        <p class="muted" style="font-size:12.5px">*Free site assessment in selected areas. We never share your details.</p>
+        <p class="muted" style="font-size:12.5px">We never share your details.</p>
         <p class="muted" style="font-size:13px">Prefer to chat? <a href="https://m.me/61591375948574" target="_blank" rel="noopener">Message us on Messenger</a> or <a href="https://wa.me/639151120470?text=Hi%20J%26A%20Electrical%2C%20I%27d%20like%20to%20ask%20about%20your%20electrical%20services." target="_blank" rel="noopener">WhatsApp</a>.</p>
       </form>
     </div>
@@ -923,7 +913,7 @@ summary:focus-visible{outline:2px solid var(--amber);outline-offset:4px;border-r
     </div>
   </section>
 
-  <footer class="foot"><div class="wrap" style="align-items:center"><span class="hdr-badge foot-badge"><span class="logo-full hdr-logo" role="img" aria-label="J &amp; A Electrical Services logo"></span></span><span>© <span id="yr"></span> J&amp;A Electrical Installation Services<br>Professional electrical services you can trust.</span><span class="foot-r"><div class="social sm"><a class="sb sb-msg" href="https://m.me/61591375948574" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2C6.4 2 2 6.1 2 11.6c0 2.9 1.2 5.4 3.2 7.1V22l3-1.7c1.2.3 2.4.5 3.8.5 5.6 0 10-4.1 10-9.6S17.6 2 12 2zm1 12.9-2.6-2.7-5 2.7 5.5-5.8 2.6 2.7 4.9-2.7-5.4 5.8z"/></svg><span>Messenger</span></a><a class="sb sb-wa" href="https://wa.me/639151120470?text=Hi%20J%26A%20Electrical%2C%20I%27d%20like%20to%20ask%20about%20your%20electrical%20services." target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a9.9 9.9 0 0 0-8.5 15l-1.4 5 5.2-1.4A10 10 0 1 0 12 2zm0 18.1a8.1 8.1 0 0 1-4.1-1.1l-.3-.2-3.1.8.8-3-.2-.3A8.1 8.1 0 1 1 12 20.1zm4.5-6c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.6 6.6 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.5l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a.9.9 0 0 0-.7.3 2.8 2.8 0 0 0-.9 2.1 4.9 4.9 0 0 0 1 2.6 11.2 11.2 0 0 0 4.3 3.8c1.6.7 2.2.7 3 .6a2.6 2.6 0 0 0 1.7-1.2 2.1 2.1 0 0 0 .2-1.2c-.1-.1-.3-.2-.5-.3z"/></svg><span>WhatsApp</span></a><a class="sb sb-fb" href="https://www.facebook.com/profile.php?id=61591375948574" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13.5 22v-8h2.7l.4-3.2h-3.1V8.8c0-.9.3-1.6 1.6-1.6h1.7V4.3c-.3 0-1.3-.1-2.5-.1-2.5 0-4.1 1.5-4.1 4.2v2.4H7.5V14h2.7v8h3.3z"/></svg><span>Facebook</span></a><a class="sb sb-reel" href="https://www.facebook.com/profile.php?id=61591375948574&sk=reels_tab" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm5 6v6l5-3-5-3z"/></svg><span>Reels</span></a></div><span><a href="#login">Client &amp; team sign-in</a></span></span></div>
+  <footer class="foot"><div class="wrap" style="align-items:center"><span class="hdr-badge foot-badge"><span class="logo-full hdr-logo" role="img" aria-label="J &amp; A Electrical Services logo"></span></span><span>© <span id="yr"></span> J&amp;A Electrical Installation Services<br>Professional electrical services you can trust.</span><span class="foot-r"><div class="social sm"><a class="sb sb-msg" href="https://m.me/61591375948574" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2C6.4 2 2 6.1 2 11.6c0 2.9 1.2 5.4 3.2 7.1V22l3-1.7c1.2.3 2.4.5 3.8.5 5.6 0 10-4.1 10-9.6S17.6 2 12 2zm1 12.9-2.6-2.7-5 2.7 5.5-5.8 2.6 2.7 4.9-2.7-5.4 5.8z"/></svg><span>Messenger</span></a><a class="sb sb-wa" href="https://wa.me/639151120470?text=Hi%20J%26A%20Electrical%2C%20I%27d%20like%20to%20ask%20about%20your%20electrical%20services." target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a9.9 9.9 0 0 0-8.5 15l-1.4 5 5.2-1.4A10 10 0 1 0 12 2zm0 18.1a8.1 8.1 0 0 1-4.1-1.1l-.3-.2-3.1.8.8-3-.2-.3A8.1 8.1 0 1 1 12 20.1zm4.5-6c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.6 6.6 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.5l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a.9.9 0 0 0-.7.3 2.8 2.8 0 0 0-.9 2.1 4.9 4.9 0 0 0 1 2.6 11.2 11.2 0 0 0 4.3 3.8c1.6.7 2.2.7 3 .6a2.6 2.6 0 0 0 1.7-1.2 2.1 2.1 0 0 0 .2-1.2c-.1-.1-.3-.2-.5-.3z"/></svg><span>WhatsApp</span></a><a class="sb sb-fb" href="https://www.facebook.com/profile.php?id=61591375948574" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13.5 22v-8h2.7l.4-3.2h-3.1V8.8c0-.9.3-1.6 1.6-1.6h1.7V4.3c-.3 0-1.3-.1-2.5-.1-2.5 0-4.1 1.5-4.1 4.2v2.4H7.5V14h2.7v8h3.3z"/></svg><span>Facebook</span></a><a class="sb sb-reel" href="https://www.facebook.com/profile.php?id=61591375948574&sk=reels_tab" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm5 6v6l5-3-5-3z"/></svg><span>Reels</span></a></div><span><a href="/office">Client &amp; team sign-in</a></span></span></div>
     <div class="wrap credit"><a href="https://radicalmediaph.com" target="_blank" rel="noopener" aria-label="Website powered by RadicalMediaPh"><span>Powered by</span><span class="rm-logo" aria-hidden="true">RM</span><b>RadicalMediaPh</b></a></div></footer>
 </div>
 
@@ -1061,7 +1051,7 @@ function closeModal(){$('#modal').hidden=true;$('#modalCard').innerHTML=''}
 
 /* ---------- public static bits ---------- */
 $('#yr').textContent=TODAY.getFullYear();
-$('#phases').innerHTML=PHASES.map(([n,a,b])=>`<details class="phase"><summary><h3>${n}</h3><span class="fold-n">Steps ${String(a+1).padStart(2,'0')}–${String(b).padStart(2,'0')} <i aria-hidden="true">+</i></span></summary><ol>${STEPS.slice(a,b).map((s,i)=>`<li><b>${String(a+i+1).padStart(2,'0')}</b><div><strong>${esc(s)}</strong><span>${esc(STEP_NOTE[a+i])}</span></div></li>`).join('')}</ol></details>`).join('');
+$('#phases').innerHTML=PHASES.map(([n,a,b])=>`<details class="phase" open><summary><h3>${n}</h3><span class="fold-n">Steps ${String(a+1).padStart(2,'0')}–${String(b).padStart(2,'0')}</span></summary><ol>${STEPS.slice(a,b).map((s,i)=>`<li><b>${String(a+i+1).padStart(2,'0')}</b><div><strong>${esc(s)}</strong><span>${esc(STEP_NOTE[a+i])}</span></div></li>`).join('')}</ol></details>`).join('');
 const SERVICES=[
  ['INS','Electrical installation services',['Residential electrical wiring','Commercial electrical wiring','New electrical installation','Electrical renovation and rewiring','Lighting and power installation','Outlet and switch installation','Dedicated power outlet installation','Air conditioning power supply','EV charger installation','Electrical service entrance installation']],
  ['PNL','Panel board and distribution system',['Panel board installation','Panel board upgrade and replacement','Circuit breaker installation and replacement','Main breaker installation','Electrical load balancing','Electrical distribution system installation','Meter base and meter center installation','NEMA 3R enclosure installation']],
@@ -1072,7 +1062,7 @@ const SERVICES=[
  ['ENG','Electrical engineering and consultancy',['Electrical engineering consultation','Electrical load calculation','Electrical system evaluation','Technical inspection and recommendations','Electrical plan preparation and related engineering services, subject to applicable professional requirements']],
  ['PMS','Maintenance and after-service support',['Scheduled electrical maintenance','Preventive maintenance','Electrical system condition assessment','Warranty inspection and assessment','After-service technical support']]
 ];
-$('#svcGrid').innerHTML=SERVICES.map(([c,h,items])=>`<details><summary><span class="code">${c}</span><h3>${esc(h)}</h3><span class="fold-n">${items.length} services <i aria-hidden="true">+</i></span></summary><ul>${items.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></details>`).join('');
+$('#svcGrid').innerHTML=SERVICES.map(([c,h,items])=>`<details open><summary><span class="code">${c}</span><h3>${esc(h)}</h3><span class="fold-n">${items.length} services</span></summary><ul>${items.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></details>`).join('');
 const PROJECTS=[
  {n:'01',name:'Emon Pulo Beach Resort',sector:'resort',tag:'Resort / hospitality',loc:'',img:'01-emon-pulo',w:1400,h:788,scope:'Hotel electrical wiring, load calculation, panel board installation, lighting and power wiring, and solar termination.',cap:'Guest room'},
  {n:'02',name:'Caylabne Beach Resort',sector:'resort',tag:'Resort / hospitality',loc:'',img:'02-caylabne',w:1400,h:934,scope:'Dome hotel electrical wiring, load calculation, panel board installation, and lighting and power wiring.',cap:'Resort accommodation and pathway'},
@@ -1111,7 +1101,7 @@ renderPubReviews();
 function renderLogin(){
   const clients=[...new Set(S.projects.map(p=>p.client))];
   $('#login').innerHTML=`<div class="login"><div class="wrap">
-    <a href="#home" aria-label="Back to the J &amp; A website" style="display:inline-block"><span class="hdr-badge"><span class="logo-full hdr-logo" role="img" aria-label="J &amp; A Electrical Services logo" style="width:190px"></span></span></a>
+    <a href="/" aria-label="Back to the J &amp; A website" style="display:inline-block"><span class="hdr-badge"><span class="logo-full hdr-logo" role="img" aria-label="J &amp; A Electrical Services logo" style="width:190px"></span></span></a>
     <div class="cards">
       <div class="card"><div class="eyebrow">Team back office</div><h2>Staff sign-in</h2>
         ${Object.entries(ROLES).map(([k,r])=>`<button class="persona" data-act="signin" data-role="${k}"><span class="av">${r.who.replace('Engr. ','').split(' ').map(w=>w[0]).join('').slice(0,2)}</span><span><b>${esc(r.who)}</b><span>${esc(r.label)} · ${r.nav.length} modules${k==='owner'?' · '+esc(JA_EMAIL):''}</span></span><span class="muted">→</span></button>`).join('')}
@@ -1122,7 +1112,7 @@ function renderLogin(){
         <button class="btn primary" data-act="portalin">Open my portal</button>
       </div>
     </div>
-    <p class="demo-note" style="margin-top:16px">Preview mode: sign-in uses one-tap demo accounts and sample data saved in this browser. In the live version each person gets their own email and password. <button class="btn xs ghost" data-act="reset">Reset sample data</button> <a class="btn xs ghost" href="#home">Back to website</a></p>
+    <p class="demo-note" style="margin-top:16px">Preview mode: sign-in uses one-tap demo accounts and sample data saved in this browser. In the live version each person gets their own email and password. <button class="btn xs ghost" data-act="reset">Reset sample data</button> <a class="btn xs ghost" href="/">Back to website</a></p>
   </div></div>`;
 }
 
@@ -1132,7 +1122,7 @@ function shell(view,title,html,extra){
   const counts={dash:al.filter(a=>a.sev==='bad').length,billing:al.filter(a=>a.go==='billing').length,materials:al.filter(a=>a.go==='materials').length,field:al.filter(a=>a.go==='field').length,warranty:al.filter(a=>a.go==='warranty').length,feedback:(S.reviews||[]).filter(r=>r.status==='pending').length};
   $('#app').innerHTML=`<div class="shell">
    <aside class="side">
-     <a class="brand" href="#home"><span class="mark-badge" style="width:40px;height:40px" aria-hidden="true"></span><span><b style="font-size:19px">J&amp;A OPS</b><small>Back office</small></span></a>
+     <a class="brand" href="/"><span class="mark-badge" style="width:40px;height:40px" aria-hidden="true"></span><span><b style="font-size:19px">J&amp;A OPS</b><small>Back office</small></span></a>
      <nav>${NAV.filter(n=>r.nav.includes(n[0])).map(([k,l])=>`<button class="${view===k||(k==='projects'&&view==='project')?'on':''}" data-go="${k}">${l}${counts[k]?`<span class="cnt">${counts[k]}</span>`:''}</button>`).join('')}</nav>
      <div class="sfoot"><span>Signed in as <b style="color:var(--text)">${esc(r.who)}</b><br>${esc(r.label)}</span><button class="btn xs ghost" data-act="reset">Reset sample data</button></div>
    </aside>
@@ -1491,7 +1481,7 @@ function renderPortal(){const c=S.session.client;const ps=S.projects.filter(p=>p
   if(!UI.pp||!ps.find(p=>p.id===UI.pp))UI.pp=ps[0]&&ps[0].id;const p=P(UI.pp);
   const pr=progress(p),R=46,C=2*Math.PI*R;
   const bal=outstanding(p);
-  $('#portal').innerHTML=`<header class="ptop"><div class="wrap"><a class="brand" href="#home"><span class="mark-badge" style="width:40px;height:40px" aria-hidden="true"></span><span><b style="font-size:19px">J&amp;A ELECTRICAL</b><small>Client portal</small></span></a>
+  $('#portal').innerHTML=`<header class="ptop"><div class="wrap"><a class="brand" href="/"><span class="mark-badge" style="width:40px;height:40px" aria-hidden="true"></span><span><b style="font-size:19px">J&amp;A ELECTRICAL</b><small>Client portal</small></span></a>
    <div class="who">${ps.length>1?`<select id="ppSel" style="width:auto">${ps.map(x=>`<option value="${x.id}" ${x.id===p.id?'selected':''}>${esc(x.name)}</option>`).join('')}</select>`:''}<span>${esc(c)}</span><button class="btn sm ghost" data-act="signout">Sign out</button></div></div></header>
   <main class="wrap pbody">
    <div class="hello"><span class="mono muted" style="font-size:12px">${p.code} · ${esc(p.site)}</span><h1>${esc(p.name)}</h1><p>Your engineer is ${esc(p.engineer)}. Questions? Call or text <span class="mono">0915-112-0470</span>, or <a href="https://m.me/61591375948574" target="_blank" rel="noopener">message us on Messenger</a>.</p></div>
@@ -1517,28 +1507,28 @@ const show=id=>['site','login','app','portal'].forEach(x=>$('#'+x).hidden=x!==id
 const CLEAN_URLS=false;
 const SLUG={home:'',services:'services',process:'how-we-work',work:'projects',tracking:'client-portal',why:'why-us',reviews:'reviews',faq:'faq',contact:'contact'};
 const pageFromSlug=x=>{x=(x||'').replace(/^\/+|\/+$/g,'').replace(/\.html$/,'');if(!x)return 'home';const k=Object.keys(SLUG).find(k=>SLUG[k]===x);return k||(SLUG[x]!==undefined?x:null)};
-const SITE_PAGES={home:['top','strip','explore','nextstep'],services:['services','nextstep'],process:['process','nextstep'],work:['work','nextstep'],tracking:['tracking','nextstep'],why:['why','nextstep'],reviews:['reviews','nextstep'],faq:['faq','nextstep'],contact:['contact']};
+const SITE_PAGES={home:['top','strip','nextstep'],services:['services','nextstep'],process:['process','nextstep'],work:['work','nextstep'],tracking:['tracking','nextstep'],why:['why','nextstep'],reviews:['reviews','nextstep'],faq:['faq','nextstep'],contact:['contact']};
 const PAGE_TITLES={home:'',services:'Our services',process:'How we work',work:'Projects',tracking:'Client portal',why:'Why choose us',reviews:'Reviews',faq:'FAQ',contact:'Contact us'};
 let curPage='home';
-function navTo(pg){if(CLEAN_URLS){history.pushState(null,'','/'+SLUG[pg]);render();window.scrollTo(0,0)}else{location.hash=pg}}
+function navTo(pg){if(CLEAN_URLS){history.pushState(null,'','/'+SLUG[pg]);render();window.scrollTo(0,0)}else{OFFICE_ROUTE.set(pg)}}
 window.addEventListener('popstate',()=>{if(CLEAN_URLS){render();window.scrollTo(0,0)}});
 function sitePage(pg){if(!SITE_PAGES[pg])pg='home';curPage=pg;const on=SITE_PAGES[pg];
   document.querySelectorAll('#site .pg').forEach(el=>el.hidden=!on.includes(el.id));
   document.querySelectorAll('#site [data-pg]').forEach(a=>{if(a.dataset.pg===pg)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')});
   if(!window.__homeTitle)window.__homeTitle=document.title;document.title=PAGE_TITLES[pg]?PAGE_TITLES[pg]+' | J&A Electrical Installation Services':window.__homeTitle;
   const dr=document.getElementById('drawer');if(dr&&dr.classList.contains('open'))A.menuclose()}
-function render(){const h=(location.hash||'#home').slice(1);
+function render(){const h=(OFFICE_ROUTE.get()||'#home').slice(1);
   if(!h||SITE_PAGES[h]){show('site');sitePage(h||'home');return}
   if(h==='login'){renderLogin();show('login');return}
-  if(h==='portal'){if(!S.session.client){location.hash='login';return}renderPortal();show('portal');return}
-  if(!S.session.role){location.hash='login';return}
+  if(h==='portal'){if(!S.session.client){OFFICE_ROUTE.set('login');return}renderPortal();show('portal');return}
+  if(!S.session.role){OFFICE_ROUTE.set('login');return}
   const r=role();
-  if(h.startsWith('project-')){const id=h.slice(8);const p=P(id);if(!r.nav.includes('projects')||!p){location.hash=r.nav[0];return}shell('project',p.code,vProject(id));show('app');return}
-  const v=VIEWS[h];if(!v||!r.nav.includes(h)){location.hash=r.nav[0];return}
+  if(h.startsWith('project-')){const id=h.slice(8);const p=P(id);if(!r.nav.includes('projects')||!p){OFFICE_ROUTE.set(r.nav[0]);return}shell('project',p.code,vProject(id));show('app');return}
+  const v=VIEWS[h];if(!v||!r.nav.includes(h)){OFFICE_ROUTE.set(r.nav[0]);return}
   shell(h,v[0],v[1]());show('app');
 }
 function rerender(){const y=window.scrollY;render();window.scrollTo(0,y)}
-function go(h,tab){if(tab)UI.ptab=tab;else if(h.startsWith('project-')&&location.hash!=='#'+h)UI.ptab='overview';if(location.hash==='#'+h)rerender();else{location.hash=h;window.scrollTo(0,0)}}
+function go(h,tab){if(tab)UI.ptab=tab;else if(h.startsWith('project-')&&OFFICE_ROUTE.get()!=='#'+h)UI.ptab='overview';if(OFFICE_ROUTE.get()==='#'+h)rerender();else{OFFICE_ROUTE.set(h);window.scrollTo(0,0)}}
 window.addEventListener('hashchange',()=>{render();window.scrollTo(0,0)});
 
 /* ---------- actions ---------- */
@@ -1619,7 +1609,7 @@ document.addEventListener('input',e=>{const t=e.target;
   if(t.matches('[data-task]')){const p=P(t.dataset.p);p.tasks[+t.dataset.task].progress=+t.value;$('#tpv'+t.dataset.task).textContent=t.value+'%';save()}
 });
 document.addEventListener('change',e=>{const t=e.target;
-  if(t.id==='roleSwitch'){S.session.role=t.value;save();const nav=ROLES[t.value].nav;const h=location.hash.slice(1);if(h.startsWith('project-')&&nav.includes('projects'))rerender();else go(nav.includes(h)?h:nav[0])}
+  if(t.id==='roleSwitch'){S.session.role=t.value;save();const nav=ROLES[t.value].nav;const h=OFFICE_ROUTE.get().slice(1);if(h.startsWith('project-')&&nav.includes('projects'))rerender();else go(nav.includes(h)?h:nav[0])}
   else if(t.matches('[data-task]'))rerender();
   else if(t.id==='npTerms')npPreview();
   else if(t.id==='matProj'){UI.matProj=t.value;rerender()}
@@ -1785,7 +1775,7 @@ function loginHTML(){
     <p class="muted" style="font-size:14px"><a href="#" data-live-mode="forgot">Forgot password?</a> · New here? <a href="#" data-live-mode="up">Create an account</a></p></div>`);
 }
 renderLogin=function(){$('#login').innerHTML=loginHTML();const f=$('#login input');if(f)f.focus()};
-function showLogin(m,msg){mode=m;note=msg||'';if(location.hash!=='#login')history.replaceState(null,'',location.pathname+'#login');renderLogin();show('login')}
+function showLogin(m,msg){mode=m;note=msg||'';if(location.pathname!=='/office/login')history.replaceState(null,'','/office/login');renderLogin();show('login')}
 
 document.addEventListener('click',e=>{
   const m=e.target.closest('[data-live-mode]');if(m){e.preventDefault();showLogin(m.dataset.liveMode);return}
@@ -1826,9 +1816,9 @@ async function afterAuth(){
   await loadTeam();
   await pull();
   ready=true;
-  const h=location.hash.slice(1);
+  const h=OFFICE_ROUTE.get().slice(1);
   const home=prof.role==='client'?'portal':ROLES[prof.role].nav[0];
-  if(!h||h==='login'||h==='reset'||(prof.role==='client'&&h!=='portal')||(prof.role!=='client'&&h==='portal'))location.hash=home;else render();
+  if(!h||h==='login'||h==='reset'||(prof.role==='client'&&h!=='portal')||(prof.role!=='client'&&h==='portal'))OFFICE_ROUTE.set(home);else render();
 }
 async function loadTeam(){
   TEAM=[];if(!['owner','pm','finance'].includes(ME.role))return;
@@ -1875,10 +1865,10 @@ A.tmsave=async d=>{
 /* ---------- routing ---------- */
 const appRender=render;
 render=function(){
-  const h=(location.hash||'').slice(1);
+  const h=(OFFICE_ROUTE.get()||'').slice(1);
   if(recovering){mode='newpw';renderLogin();show('login');return}
   if(!ready){if(mode==='in'||mode==='loading'||!document.querySelector('#login .card'))renderLogin();show('login');return}
-  if(!h||h==='login'||SITE_PAGES[h]){location.hash=S.session.client?'portal':ROLES[S.session.role].nav[0];return}
+  if(!h||h==='login'||SITE_PAGES[h]){OFFICE_ROUTE.set(S.session.client?'portal':ROLES[S.session.role].nav[0]);return}
   appRender();
 };
 
