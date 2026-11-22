@@ -1119,7 +1119,7 @@ function renderLogin(){
 /* ---------- APP SHELL ---------- */
 function shell(view,title,html,extra){
   const al=alerts();const r=role();
-  const counts={dash:al.filter(a=>a.sev==='bad').length,billing:al.filter(a=>a.go==='billing').length,materials:al.filter(a=>a.go==='materials').length,field:al.filter(a=>a.go==='field').length,warranty:al.filter(a=>a.go==='warranty').length,feedback:(S.reviews||[]).filter(r=>r.status==='pending').length};
+  const counts={dash:al.filter(a=>a.sev==='bad').length,billing:al.filter(a=>a.go==='billing').length+(S.proofs||[]).filter(x=>x.status==='pending').length,materials:al.filter(a=>a.go==='materials').length,field:al.filter(a=>a.go==='field').length,warranty:al.filter(a=>a.go==='warranty').length,feedback:(S.reviews||[]).filter(r=>r.status==='pending').length};
   $('#app').innerHTML=`<div class="shell">
    <aside class="side">
      <a class="brand" href="/"><span class="mark-badge" style="width:40px;height:40px" aria-hidden="true"></span><span><b style="font-size:19px">J&amp;A OPS</b><small>Back office</small></span></a>
@@ -1169,10 +1169,10 @@ function vSales(){
   return `<div class="toolbar"><p class="muted">Steps 1–4 of the process. Website quote requests land in Discovery automatically. Add walk-ins, calls and referrals yourself.</p><button class="btn primary" data-act="newlead">+ New lead</button></div>
   <div class="kanban">${LANES.map(([k,l],li)=>{const ls=S.leads.filter(x=>x.stage===k);return `<div class="lane"><header><h4>${l}</h4><span>${ls.length} · ${pesoK(sum(ls,x=>x.value))}</span></header>
    ${ls.map(x=>`<div class="lead"><div style="display:flex;justify-content:space-between;gap:8px"><b>${esc(x.name)}</b>${x.source==='Website'?pill('amber','Website'):`<span class="muted" style="font-size:12px">${esc(x.source)}</span>`}</div>
-     <div class="meta">${esc(x.contact)} · <span class="mono">${esc(x.phone)}</span><br>${esc(x.type)} · ${esc(x.city)}</div>
+     <div class="meta">${esc(x.contact)} · <span class="mono">${esc(x.phone)}</span>${x.email?`<br><span class="mono">${esc(x.email)}</span>`:''}<br>${esc(x.type)} · ${esc(x.city)}</div>
      <div>${esc(x.service)}</div><div class="val">${x.value?peso(x.value):'<span class="muted" style="font-size:14px;font-family:var(--f-body)">Not estimated</span>'}</div>
-     <div class="meta">Next: ${esc(x.next||'—')}</div>
-     <div class="acts">${li>0?`<button class="btn xs" data-act="leadmove" data-id="${x.id}" data-dir="-1" aria-label="Move back">←</button>`:''}${li<3?`<button class="btn xs" data-act="leadmove" data-id="${x.id}" data-dir="1">Move →</button>`:''}<button class="btn xs" data-act="estimate" data-id="${x.id}">Estimate</button>${k==='accepted'?`<button class="btn xs primary" data-act="convert" data-id="${x.id}">Create project</button>`:''}${S.session.role==='owner'?`<button class="btn xs ghost" data-act="ldelask" data-id="${x.id}" style="color:var(--bad)" title="Delete this lead">Delete</button>`:''}</div></div>`).join('')||'<div class="empty" style="padding:16px">No leads</div>'}
+     <div class="meta">Next: ${esc(x.next||'—')}</div>${x.quote?`<div>${x.quote.status==='accepted'?pill('good','Accepted online by '+x.quote.acceptedBy):pill('info','Quotation '+x.quote.no+' sent '+fmtD(x.quote.sentAt))}</div>`:''}
+     <div class="acts">${li>0?`<button class="btn xs" data-act="leadmove" data-id="${x.id}" data-dir="-1" aria-label="Move back">←</button>`:''}${li<3?`<button class="btn xs" data-act="leadmove" data-id="${x.id}" data-dir="1">Move →</button>`:''}<button class="btn xs" data-act="estimate" data-id="${x.id}">Estimate</button>${x.est&&can('edit')?`<button class="btn xs ${x.quote||k==='accepted'?'':'primary'}" data-act="qsend" data-id="${x.id}">${x.quote?'Resend quotation':'Send quotation'}</button>`:''}${k==='accepted'?`<button class="btn xs primary" data-act="convert" data-id="${x.id}">Create project</button>`:''}${S.session.role==='owner'?`<button class="btn xs ghost" data-act="ldelask" data-id="${x.id}" style="color:var(--bad)" title="Delete this lead">Delete</button>`:''}</div></div>`).join('')||'<div class="empty" style="padding:16px">No leads</div>'}
    </div>`}).join('')}</div>`;
 }
 function estRow(r){return `<tr><td><input class="e-n" value="${esc(r[0])}" placeholder="Item or work" aria-label="Item"></td><td class="r"><input class="e-q" type="number" min="0" step="any" value="${r[1]}" style="width:70px;text-align:right" data-est aria-label="Quantity"></td><td class="r"><input class="e-c" type="number" min="0" step="any" value="${r[2]}" style="width:120px;text-align:right" data-est aria-label="Unit cost"></td><td class="r num e-a"></td><td class="r" style="width:34px"><button type="button" class="btn xs ghost" data-act="estdel" aria-label="Remove this item" title="Remove">×</button></td></tr>`}
@@ -1191,6 +1191,52 @@ function estRows(){return [...document.querySelectorAll('#estT tbody tr')].map(t
 function estCalc(){let sub=0;document.querySelectorAll('#estT tbody tr').forEach(tr=>{const a=(+tr.querySelector('.e-q').value||0)*(+tr.querySelector('.e-c').value||0);sub+=a;tr.querySelector('.e-a').textContent=peso(a)});const mk=sub*(+$('#emk').value||0)/100,vat=(sub+mk)*(+$('#evat').value)/100;const tot=sub+mk+vat;$('#etot').innerHTML=`<div style="display:grid;grid-template-columns:1fr auto;gap:4px 16px;font-size:14px"><span class="muted">Direct cost</span><span class="num">${peso(sub)}</span><span class="muted">Markup</span><span class="num">${peso(mk)}</span><span class="muted">VAT</span><span class="num">${peso(vat)}</span><b>Quotation price</b><b class="num" style="color:var(--amber);font-size:20px">${peso(tot)}</b></div>`;$('#etot').dataset.total=Math.round(tot)}
 
 /* ---------- NEW PROJECT / LEAD ---------- */
+const QUOTE_VALID=[[15,'15 days'],[30,'30 days'],[60,'60 days']];
+const okEmail=s=>/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(s||'').trim());
+function quoteLines(l){const e=l.est||{rows:[],mk:0,vat:12};const f=1+(+e.mk||0)/100;
+  const rows=(e.rows||[]).filter(r=>r[0]||r[1]*r[2]).map(r=>{const qty=+r[1]||0,unit=Math.round((+r[2]||0)*f);return [r[0]||'Item',qty,unit,Math.round(qty*unit)]});
+  const sub=rows.reduce((a,r)=>a+r[3],0),vatRate=+e.vat||0,vat=Math.round(sub*vatRate/100);return {rows,sub,vatRate,vat,total:sub+vat}}
+function quoteToken(){const a=new Uint8Array(18);crypto.getRandomValues(a);return 'q'+[...a].map(b=>b.toString(16).padStart(2,'0')).join('')}
+function quoteNo(l){return 'Q-'+D(0).replace(/-/g,'').slice(2)+'-'+String(l.id).slice(-3).toUpperCase()}
+const termsFor=(key,total)=>(TERM_PRESETS[key]||TERM_PRESETS.std)[1].map(([lb,pc,ms])=>[lb,pc,ms,Math.round(total*pc/100)]);
+function quoteDoc(q,l){const tp=q.terms||[];
+  return `<div class="soa qdoc"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap"><div><h4>J and A Electrical Installation Services</h4><div class="muted2">${esc(CO.addr)} · ${esc(CO.phone)}<br>${esc(CO.email)}</div></div><div style="text-align:right"><b>QUOTATION</b><div class="muted2">${esc(q.no)}<br>Date ${fmtD(q.date)}<br>Valid until ${fmtD(q.validUntil)}</div></div></div>
+   <div style="margin-top:14px"><b>${esc(l.name)}</b><div class="muted2">Attn: ${esc(l.contact||l.name)}${l.city&&l.city!=='—'?' · '+esc(l.city):''}${l.service?'<br>Work: '+esc(l.service):''}</div></div>
+   <table><thead><tr><th>Item</th><th class="r">Qty</th><th class="r">Unit price</th><th class="r">Amount</th></tr></thead><tbody>${q.rows.map(r=>`<tr><td>${esc(r[0])}</td><td class="r">${r[1]}</td><td class="r">${peso(r[2])}</td><td class="r">${peso(r[3])}</td></tr>`).join('')}</tbody></table>
+   <div style="display:grid;grid-template-columns:1fr auto;gap:4px 16px;margin-top:10px"><span>Subtotal</span><span style="text-align:right">${peso(q.sub)}</span>${q.vatRate?`<span>VAT ${q.vatRate}%</span><span style="text-align:right">${peso(q.vat)}</span>`:''}</div>
+   <div style="display:flex;justify-content:space-between;margin-top:8px" class="tot"><span>Total amount</span><span>${peso(q.total)}</span></div>
+   ${tp.length?`<p style="margin-top:14px"><b>Payment terms</b></p><table><tbody>${tp.map(t=>`<tr><td>${esc(t[0])} (${t[1]}%)</td><td>${esc(t[2])}</td><td class="r">${peso(t[3])}</td></tr>`).join('')}</tbody></table>`:''}
+   ${q.notes?`<p style="margin-top:12px;white-space:pre-wrap">${esc(q.notes)}</p>`:''}
+   <p class="muted2" style="margin-top:12px">${q.vatRate?'Prices include 12% VAT. ':''}Work is led by ${esc(CO.rep)}, Registered Electrical Engineer, with a 1-year service warranty on covered workmanship, subject to terms.</p></div>`}
+function quoteModal(id){const l=S.leads.find(x=>x.id===id);if(!l)return;if(!l.est){toast('Make the estimate first');return}
+  const prev=l.quote||{};const key=prev.termsKey||'std';
+  modal((prev.token?'Resend quotation · ':'Send quotation · ')+l.name,`<p class="muted" style="font-size:13px">The client gets an email from J&amp;A with a link to view this quotation, save it as a PDF and accept it online. Your markup is built into the unit prices, so the client never sees your costs.</p>
+  <div class="fgrid"><label class="f">Client email *<input id="qEmail" type="email" value="${esc(l.email||'')}" placeholder="client@email.com"></label>
+  <label class="f">Valid for<select id="qValid">${QUOTE_VALID.map(([n,t])=>`<option value="${n}" ${n===30?'selected':''}>${t}</option>`).join('')}</select></label>
+  <label class="f">Payment terms<select id="qTerms">${Object.entries(TERM_PRESETS).map(([k,v])=>`<option value="${k}" ${k===key?'selected':''}>${esc(v[0])}</option>`).join('')}</select></label></div>
+  <label class="f">Notes for the client (optional)<textarea id="qNotes" placeholder="e.g. Includes permit drawings. Excludes civil works and repainting.">${esc(prev.notes||'')}</textarea></label>
+  ${prev.token?`<p class="muted" style="font-size:13px">Sending again gives the client a new link, and the link in the earlier email stops working.${prev.status==='accepted'?' This quotation was already accepted online.':''}</p>`:''}
+  <p style="margin:12px 0 6px;font-size:13px" class="muted">What the client will see:</p><div id="qPrev" data-id="${l.id}"></div>
+  <p id="qErr" style="color:var(--bad);font-size:13.5px" hidden></p>`,
+  `<button class="btn" data-act="close">Cancel</button><button class="btn primary" data-act="qdo" data-id="${l.id}">Send to client</button>`);$('#modalCard').classList.add('wide');qPreview()}
+function qPreview(){const box=$('#qPrev');if(!box)return;const l=S.leads.find(x=>x.id===box.dataset.id);if(!l)return;const q=quoteLines(l);
+  box.innerHTML=quoteDoc(Object.assign({no:(l.quote&&l.quote.no)||quoteNo(l),date:D(0),validUntil:D(+$('#qValid').value||30),terms:termsFor($('#qTerms').value,q.total),notes:$('#qNotes').value.trim()},q),l)}
+function portalLine(p){return `<span>${p.invite?`Client portal: invite sent ${fmtD(p.invite.sentAt)} to <span class="mono">${esc(p.invite.email)}</span> <button class="btn xs ghost" data-act="pinvite" data-p="${p.id}">Resend</button>`:`<button class="btn xs" data-act="pinvite" data-p="${p.id}">Invite client to portal</button>`}</span>`}
+/* payment proofs */
+const proofsFor=(p,t)=>(S.proofs||[]).filter(x=>x.pid===p.id&&x.termId===t.id);
+const proofPill=(p,t)=>proofsFor(p,t).some(x=>x.status==='pending')?' '+pill('warn','Proof uploaded'):'';
+const SAFE_FILE=/^data:(image\/jpeg|image\/png|application\/pdf);base64,[A-Za-z0-9+\/=]+$/;
+function readProof(f){return new Promise((res,rej)=>{const isPdf=/pdf$/i.test(f.type)||/\.pdf$/i.test(f.name);const r=new FileReader();r.onerror=()=>rej(new Error('That file could not be read. Try a photo (JPG or PNG) or a PDF.'));
+  if(isPdf){if(f.size>2e6)return rej(new Error('That PDF is over 2 MB. Please send a photo of the receipt or a smaller PDF.'));r.onload=()=>res({name:f.name,type:'application/pdf',data:String(r.result).replace(/^data:[^;,]*;/,'data:application/pdf;')});r.readAsDataURL(f);return}
+  if(!/^image\//.test(f.type))return rej(new Error('Please choose a photo (JPG or PNG) or a PDF.'));
+  r.onload=()=>{const im=new Image();im.onload=()=>{const m=1600,k=Math.min(1,m/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);res({name:f.name.replace(/\.[^.]+$/,'')+'.jpg',type:'image/jpeg',data:c.toDataURL('image/jpeg',.82)})};im.onerror=()=>rej(new Error('That photo could not be opened. Please use a JPG or PNG.'));im.src=r.result};r.readAsDataURL(f)})}
+function portalTermRows(p){return p.terms.map((t,i)=>{const st=tStatus(t);const bal=Math.max(0,t.amount-t.paid);const pf=proofsFor(p,t);const last=pf[pf.length-1];let a='';
+  if((st==='billed'||st==='overdue')&&bal>0){if(last&&last.status==='pending')a=`<span class="muted" style="font-size:12.5px">Proof sent ${fmtD(last.date)}. J&amp;A is checking it.</span>`;
+    else a=`<button class="btn xs primary" data-act="proofup" data-p="${p.id}" data-i="${i}">Upload proof of payment</button>${last&&last.status==='rejected'?`<span class="sub" style="color:var(--bad)">Your last proof was not matched${last.reason?': '+esc(last.reason):''}</span>`:''}`}
+  else if(bal===0&&last&&last.status==='confirmed')a=pill('good','Payment confirmed');
+  return `<tr><td><b>${esc(t.label)}</b> <span class="muted">${t.pct}%</span><span class="sub">${esc(t.milestone)}</span></td><td>${tPill(t)}</td><td>${t.due?fmtD(t.due):'—'}</td><td class="r">${peso(t.amount)}</td><td class="r">${peso(t.paid)}</td><td class="r"><b>${peso(bal)}</b></td><td>${a}</td></tr>`}).join('')}
+function proofPanel(){const pend=(S.proofs||[]).filter(x=>x.status==='pending');if(!pend.length)return '';
+  return `<div class="panel"><header><h3>Payment proofs to check</h3>${pill('warn',pend.length+' new')}</header><div class="tbl"><table class="t"><thead><tr><th>Client · billing</th><th>Date paid</th><th>Method</th><th class="r">Amount</th><th></th></tr></thead><tbody>${pend.map(x=>`<tr><td><b>${esc(x.by)}</b><span class="sub">${esc(x.code)} · ${esc(x.term)}</span></td><td>${fmtD(x.date)}</td><td>${esc(x.method)}${x.ref?`<span class="sub mono">${esc(x.ref)}</span>`:''}</td><td class="r">${peso(x.amount)}</td><td><div class="acts"><button class="btn xs" data-act="proofview" data-id="${x.id}">View receipt</button><button class="btn xs ghost" data-act="proofno" data-id="${x.id}">Not received</button><button class="btn xs primary" data-act="proofok" data-id="${x.id}">Confirm payment</button></div></td></tr>`).join('')}</tbody></table></div></div>`}
 const TERM_PRESETS={std:['30 / 40 / 25 / 5 (standard)',[['Downpayment',30,'On approval'],['Progress billing',40,'50% installed'],['Final billing',25,'On turnover'],['Retention',5,'End of warranty']]],q30:['30 / 30 / 30 / 10',[['Downpayment',30,'On approval'],['Progress billing',30,'50% installed'],['Final billing',30,'On turnover'],['Retention',10,'End of warranty']]],half:['50 / 50',[['Downpayment',50,'On approval'],['Final billing',50,'On turnover']]],dp70:['70 / 30',[['Downpayment',70,'On approval'],['Final billing',30,'On turnover']]],full:['100% on completion (small jobs)',[['Full payment',100,'On completion']]]};
 const TEAM_PM=['Engr. John Burgos','Jun Abella'];
 const TEAM_ENG=['Engr. Ana Santos','Engr. John Burgos'];
@@ -1205,6 +1251,7 @@ function newProjectModal(pre){pre=pre||{};
   <h4 class="np-h">1 · Client</h4>
   <div class="fgrid"><label class="f">Client or company name *<input id="npClient" value="${esc(pre.client||'')}" placeholder="e.g. Greenfield Auto Shop"></label><label class="f">Contact person<input id="npContact" value="${esc(pre.contact||'')}" placeholder="e.g. Ben Garcia"></label>
   <label class="f">Phone<input id="npPhone" value="${esc(pre.phone||'')}" placeholder="09XX XXX XXXX"></label><label class="f">Email (for their client portal)<input id="npEmail" type="email" value="${esc(pre.email||'')}" placeholder="client@email.com"></label></div>
+  <label class="switch"><input type="checkbox" id="npInvite" checked> Email the client an invite to their portal (needs their email)</label>
   <h4 class="np-h">2 · Project</h4>
   <div class="fgrid"><label class="f">Project name *<input id="npName" value="${esc(pre.name||'')}" placeholder="e.g. 3-phase supply for lifts"></label><label class="f">Site address *<input id="npSite" value="${esc(pre.site||'')}" placeholder="e.g. Bagumbong, Caloocan"></label>
   <label class="f">Property type<select id="npType">${o(types,types.includes(pre.type)?pre.type:'Residential')}</select></label><label class="f">Contract value (₱) *<input id="npValue" type="number" min="0" step="1000" value="${pre.value||''}" placeholder="e.g. 410000"></label>
@@ -1212,7 +1259,7 @@ function newProjectModal(pre){pre=pre||{};
   <label class="f">Starting step<select id="npStage">${[[3,'04 · Acceptance'],[4,'05 · Project plan & Gantt'],[5,'06 · Downpayment'],[6,'07 · Mobilization']].map(([v,l])=>`<option value="${v}" ${v===4?'selected':''}>${l}</option>`).join('')}</select></label><label class="f">Project manager<select id="npPm">${o(TEAM_PM,TEAM_PM[0])}</select></label>
   <label class="f">Site engineer<select id="npEng">${o(teamEng(),'Engr. Ana Santos')}</select></label></div>
   <h4 class="np-h">3 · Payment terms</h4>
-  <label class="f">Terms<select id="npTerms">${Object.entries(TERM_PRESETS).map(([k,v])=>`<option value="${k}">${v[0]}</option>`).join('')}</select></label>
+  <label class="f">Terms<select id="npTerms">${Object.entries(TERM_PRESETS).map(([k,v])=>`<option value="${k}" ${k===(pre.terms||'std')?'selected':''}>${v[0]}</option>`).join('')}</select></label>
   <div id="npTermsPrev" class="np-terms"></div>
   <label class="switch"><input type="checkbox" id="npDP" checked> First payment is ready to bill now</label>
   <h4 class="np-h">4 · Schedule</h4>
@@ -1226,17 +1273,20 @@ function npSave(leadId){const g=id=>$('#'+id).value.trim();const err=$('#npErr')
   const miss=[!client&&'client name',!name&&'project name',!site&&'site address',!(value>0)&&'contract value',!start&&'start date',!end&&'target completion'].filter(Boolean);
   if(miss.length){err.textContent='Please add the '+miss.join(', ')+'.';err.hidden=false;err.scrollIntoView({block:'nearest'});return}
   if(end<=start){err.textContent='Target completion must be after the start date.';err.hidden=false;return}
+  const em=g('npEmail').toLowerCase();if(em&&!okEmail(em)){err.textContent='Please check the client email address.';err.hidden=false;return}
+  const L=leadId&&S.leads.find(x=>x.id===leadId);const Lq=L&&L.quote&&L.quote.status==='accepted'?L.quote:null;
+  const invite=em&&$('#npInvite').checked?{email:em,req:Date.now(),sentAt:D(0)}:null;
   let tasks=[];if($('#npTpl').checked){const s0=+dt(start),n=(+dt(end)-s0)/864e5;const at=f=>iso(new Date(s0+Math.round(n*f)*864e5));
     tasks=[['Mobilization',0,.06],['Rough-in & conduit',.07,.45],['Panel & wiring',.35,.7],['Fixtures & devices',.6,.85],['Testing & commissioning',.86,.94],['Turnover & punch list',.95,1]].map(([nm,a,b])=>({name:nm,start:at(a),end:at(b),progress:0}))}
   const terms=mkTerms(value,TERM_PRESETS[g('npTerms')][1]);if($('#npDP').checked&&terms[0])terms[0].ready=true;
   const id='p'+uid('');
-  S.projects.push({id,code:nextCode(),name,client,contact:g('npContact')||client,phone:g('npPhone'),email:g('npEmail'),site,type:g('npType'),value,stage:+g('npStage'),start,end,pm:g('npPm'),engineer:g('npEng'),completed:null,warrantyEnd:null,tasks,bom:[],reports:[],tests:STD_TESTS(),punch:[],docs:[{name:'Signed quotation',rev:'—',status:'approved'}],terms});
+  S.projects.push({id,code:nextCode(),name,client,contact:g('npContact')||client,phone:g('npPhone'),email:em,site,type:g('npType'),value,stage:+g('npStage'),start,end,pm:g('npPm'),engineer:g('npEng'),completed:null,warrantyEnd:null,tasks,bom:[],reports:[],tests:STD_TESTS(),punch:[],docs:[{name:Lq?`Quotation ${Lq.no} (accepted online by ${Lq.acceptedBy}, ${Lq.acceptedAt})`:'Signed quotation',rev:'—',status:'approved'}],terms});if(invite)P(id).invite=invite;
   if(leadId)S.leads=S.leads.filter(x=>x.id!==leadId);
-  save();closeModal();UI.ptab='overview';toast('Project created. It now appears on the dashboard and in the client portal.');go('project-'+id)}
+  save();closeModal();UI.ptab='overview';toast(invite?'Project created. Portal invite emailed to '+em:'Project created. It now appears on the dashboard and in the client portal.');go('project-'+id)}
 function newLeadModal(){
   modal('New lead',`<p class="muted" style="font-size:13px">For calls, walk-ins, Facebook messages and referrals. Website requests are added automatically.</p>
   <div class="fgrid"><label class="f">Client or company name *<input id="nlName" placeholder="e.g. Casa Verde Café"></label><label class="f">Contact person<input id="nlContact"></label>
-  <label class="f">Phone *<input id="nlPhone" placeholder="09XX XXX XXXX"></label><label class="f">City<input id="nlCity" placeholder="e.g. Makati"></label>
+  <label class="f">Phone *<input id="nlPhone" placeholder="09XX XXX XXXX"></label><label class="f">Email (to send the quotation)<input id="nlEmail" type="email" placeholder="client@email.com"></label><label class="f">City<input id="nlCity" placeholder="e.g. Makati"></label>
   <label class="f">Property type<select id="nlType"><option>Residential</option><option>Commercial</option><option>Industrial</option><option>Resort / hospitality</option><option>School / educational</option><option>Office</option></select></label><label class="f">Came from<select id="nlSrc"><option>Phone call</option><option>Facebook</option><option>Referral</option><option>Walk-in</option><option>Website</option></select></label></div>
   <label class="f">What do they need? *<input id="nlSvc" placeholder="e.g. Panel board upgrade and 2 aircon lines"></label>
   <p id="nlErr" style="color:var(--bad);font-size:13.5px" hidden></p>`,`<button class="btn" data-act="close">Cancel</button><button class="btn primary" data-act="nlsave">Add lead</button>`)}
@@ -1257,7 +1307,7 @@ function bomTable(p,edit){return `<div class="tbl"><table class="t"><thead><tr><
   <tr><td><b>Total</b></td><td colspan="5"></td><td class="r"><b>${peso(sum(p.bom,b=>b.planned*b.cost))}</b></td><td class="r"><b>${peso(sum(p.bom,b=>b.delivered*b.cost))}</b></td><td></td></tr></tbody></table></div>`}
 function termRows(p,actions){return p.terms.map((t,i)=>{const st=tStatus(t);let a='';
   if(actions&&can('money')){if(st==='ready')a=`<button class="btn xs primary" data-act="soa" data-p="${p.id}" data-i="${i}" data-bill="1">Bill now</button>`;else if(st==='billed'||st==='overdue')a=`<button class="btn xs" data-act="soa" data-p="${p.id}" data-i="${i}">SOA</button><button class="btn xs" data-act="remind" data-p="${p.id}" data-i="${i}">Remind</button><button class="btn xs primary" data-act="pay" data-p="${p.id}" data-i="${i}">Record payment</button>`;else if(st==='unbilled')a=`<button class="btn xs ghost" data-act="markready" data-p="${p.id}" data-i="${i}">Milestone reached</button>`}
-  return `<tr><td><b>${esc(t.label)}</b> <span class="muted">${t.pct}%</span><span class="sub">${esc(t.milestone)}</span></td><td>${tPill(t)}</td><td>${t.due?fmtD(t.due):'—'}</td><td class="r">${peso(t.amount)}</td><td class="r">${peso(t.paid)}</td><td class="r"><b>${peso(Math.max(0,t.amount-t.paid))}</b></td>${actions?`<td><div class="acts">${a}</div></td>`:''}</tr>`}).join('')}
+  return `<tr><td><b>${esc(t.label)}</b> <span class="muted">${t.pct}%</span><span class="sub">${esc(t.milestone)}</span></td><td>${tPill(t)}${proofPill(p,t)}</td><td>${t.due?fmtD(t.due):'—'}</td><td class="r">${peso(t.amount)}</td><td class="r">${peso(t.paid)}</td><td class="r"><b>${peso(Math.max(0,t.amount-t.paid))}</b></td>${actions?`<td><div class="acts">${a}</div></td>`:''}</tr>`}).join('')}
 function vProject(id){const p=P(id);if(!p)return '<div class="empty">Project not found.</div>';
   const tabs=[['overview','Overview'],['timeline','Timeline'],['materials','Materials'],['reports','Site reports'],['quality','Testing & quality'],['docs','Drawings'],['billing','Billing'],['contract','Contract']].filter(t=>!['billing','contract'].includes(t[0])||can('money')||can('edit'));
   if(!tabs.find(t=>t[0]===UI.ptab))UI.ptab='overview';
@@ -1265,7 +1315,7 @@ function vProject(id){const p=P(id);if(!p)return '<div class="empty">Project not
   if(UI.ptab==='overview'){const al=[...slipping(p).map(t=>({sev:'bad',txt:`“${t.name}” is ${-days(t.end)} days late`})),...bomIssues(p)];
     body=`<div class="kpis"><div class="kpi amber"><span>Progress</span><b>${progress(p)}%</b><small>${p.tasks.filter(t=>t.progress>=100).length}/${p.tasks.length} tasks done</small></div><div class="kpi"><span>Contract</span><b>${peso(p.value)}</b><small>${esc(p.type)}</small></div><div class="kpi ${overdueAmt(p)?'bad':''}"><span>Balance billed</span><b>${peso(outstanding(p))}</b><small>${overdueAmt(p)?peso(overdueAmt(p))+' overdue':'nothing overdue'}</small></div><div class="kpi"><span>Schedule</span><b>${p.stage>=10?'Done':days(p.end)+'d'}</b><small>${p.stage>=10?'Completed '+fmtD(p.completed):'to target '+fmtD(p.end)}</small></div></div>
      <div class="cols"><div class="panel"><header><h3>Alerts</h3></header><div class="alerts">${al.length?al.map(a=>`<div class="alert ${a.sev}" style="cursor:default"><i></i><span>${esc(a.txt)}</span><span></span></div>`).join(''):'<div class="empty">No alerts on this project.</div>'}</div></div>
-     <div class="panel"><header><h3>Client</h3></header><div class="pad" style="display:grid;gap:6px;font-size:14px"><b>${esc(p.client)}</b><span>${esc(p.contact)} · <span class="mono">${esc(p.phone)}</span></span><span class="muted">${esc(p.site)}</span><span class="muted">PM ${esc(p.pm)} · Engineer ${esc(p.engineer)}</span>${p.warrantyEnd?`<span>Warranty until ${fmtD(p.warrantyEnd)}</span>`:''}</div></div></div>`}
+     <div class="panel"><header><h3>Client</h3></header><div class="pad" style="display:grid;gap:6px;font-size:14px"><b>${esc(p.client)}</b><span>${esc(p.contact)} · <span class="mono">${esc(p.phone)}</span></span><span class="muted">${esc(p.site)}</span><span class="muted">PM ${esc(p.pm)} · Engineer ${esc(p.engineer)}</span>${p.warrantyEnd?`<span>Warranty until ${fmtD(p.warrantyEnd)}</span>`:''}${can('edit')?portalLine(p):''}</div></div></div>`}
   const addTask=can('edit')?`<form class="panel addrow" data-form="addtask" data-p="${p.id}"><header><h3>Add a task</h3></header><div class="pad addgrid"><label class="f">Task name<input id="atName" required placeholder="e.g. Aircon power lines"></label><label class="f">Start<input id="atStart" type="date" value="${D(0)}"></label><label class="f">End<input id="atEnd" type="date" value="${D(7)}"></label><button class="btn primary" type="submit">Add task</button></div></form>`:'';
   const addMat=can('edit')?`<form class="panel addrow" data-form="addmat" data-p="${p.id}"><header><h3>Add a material to the BOM</h3></header><div class="pad addgrid"><label class="f">Item<input id="amItem" required placeholder="e.g. THHN wire 3.5mm² (150m roll)"></label><label class="f">Unit<input id="amUnit" value="pc"></label><label class="f">BOM qty<input id="amQty" type="number" min="1" value="1"></label><label class="f">Unit cost (₱)<input id="amCost" type="number" min="0" value="0"></label><button class="btn primary" type="submit">Add material</button></div></form>`:'';
   const addDoc=can('edit')?`<form class="panel addrow" data-form="adddoc" data-p="${p.id}"><header><h3>Upload a drawing for client approval</h3></header><div class="pad addgrid"><label class="f">Drawing name<input id="adName" required placeholder="e.g. Lighting layout 2F"></label><label class="f">Revision<input id="adRev" value="A"></label><label class="f">File<input id="adFile" type="file" accept=".pdf,image/*"></label><button class="btn primary" type="submit">Send to client</button></div></form>`:'';
@@ -1429,11 +1479,11 @@ function vBilling(){const rows=[];S.projects.forEach(p=>p.terms.forEach((t,i)=>{
   const tot=sum(buck,b=>b[1])||1;const colors=['var(--info)','var(--warn)','#E8743A','var(--bad)'];
   const order={overdue:0,ready:1,billed:2,unbilled:3,paid:4};rows.sort((a,b)=>order[a.st]-order[b.st]);
   return `<div class="kpis"><div class="kpi"><span>Receivables</span><b>${peso(sum(open,r=>r.t.amount-r.t.paid))}</b><small>${open.length} open statements</small></div><div class="kpi bad"><span>Overdue</span><b>${peso(sum(open.filter(r=>r.st==='overdue'),r=>r.t.amount-r.t.paid))}</b></div><div class="kpi warn"><span>Ready to bill</span><b>${peso(sum(rows.filter(r=>r.st==='ready'),r=>r.t.amount))}</b><small>bill these today</small></div><div class="kpi good"><span>Collected this month</span><b>${peso(S.months[5].collected)}</b></div></div>
-  <div class="panel"><header><h3>Receivables aging</h3></header><div class="pad"><div style="display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--line)">${buck.map((b,i)=>b[1]?`<div style="width:${b[1]/tot*100}%;background:${colors[i]}" title="${b[0]}"></div>`:'').join('')}</div>
+  ${proofPanel()}<div class="panel"><header><h3>Receivables aging</h3></header><div class="pad"><div style="display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--line)">${buck.map((b,i)=>b[1]?`<div style="width:${b[1]/tot*100}%;background:${colors[i]}" title="${b[0]}"></div>`:'').join('')}</div>
    <div style="display:flex;flex-wrap:wrap;gap:8px 24px;margin-top:12px;font-size:13px">${buck.map((b,i)=>`<span><i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${colors[i]};margin-right:6px"></i>${b[0]} <b class="num">${peso(b[1])}</b></span>`).join('')}</div></div></div>
   <div class="panel"><header><h3>Statements &amp; payment terms</h3></header><div class="tbl"><table class="t"><thead><tr><th>Client · term</th><th>Status</th><th>Due</th><th class="r">Amount</th><th class="r">Paid</th><th class="r">Balance</th><th></th></tr></thead><tbody>
    ${rows.filter(r=>r.st!=='paid').map(({p,t,i,st})=>{let a='';if(st==='ready')a=`<button class="btn xs primary" data-act="soa" data-p="${p.id}" data-i="${i}" data-bill="1">Bill now</button>`;else if(st==='billed'||st==='overdue')a=`<button class="btn xs" data-act="soa" data-p="${p.id}" data-i="${i}">SOA</button><button class="btn xs" data-act="remind" data-p="${p.id}" data-i="${i}">Remind</button><button class="btn xs primary" data-act="pay" data-p="${p.id}" data-i="${i}">Record payment</button>`;else a=`<button class="btn xs ghost" data-act="markready" data-p="${p.id}" data-i="${i}">Milestone reached</button>`;
-   return `<tr><td><b>${esc(p.client)}</b><span class="sub">${p.code} · ${esc(t.label)} ${t.pct}% · ${esc(t.milestone)}</span></td><td>${tPill(t)}</td><td>${t.due?fmtD(t.due):'—'}</td><td class="r">${peso(t.amount)}</td><td class="r">${peso(t.paid)}</td><td class="r"><b>${peso(t.amount-t.paid)}</b></td><td><div class="acts">${a}</div></td></tr>`}).join('')}
+   return `<tr><td><b>${esc(p.client)}</b><span class="sub">${p.code} · ${esc(t.label)} ${t.pct}% · ${esc(t.milestone)}</span></td><td>${tPill(t)}${proofPill(p,t)}</td><td>${t.due?fmtD(t.due):'—'}</td><td class="r">${peso(t.amount)}</td><td class="r">${peso(t.paid)}</td><td class="r"><b>${peso(t.amount-t.paid)}</b></td><td><div class="acts">${a}</div></td></tr>`}).join('')}
   </tbody></table></div></div>
   <div class="cols even"><div class="panel"><header><h3>Automatic reminders</h3></header><div class="pad" style="display:grid;gap:12px">
     <label class="switch"><input type="checkbox" id="autoRemind" ${S.settings.autoRemind?'checked':''}> Remind the team 3 days before, on, and 7 days after each due date</label>
@@ -1449,8 +1499,8 @@ function soa(pid,i,bill){const p=P(pid),t=p.terms[i];const due=bill?D(15):t.due;
    <div style="display:flex;justify-content:space-between;margin-top:12px" class="tot"><span>Total amount due</span><span>${peso(sum(p.terms.filter((x,j)=>x.billed||j==i),x=>x.amount-x.paid))}</span></div>
    <p class="muted2" style="margin-top:12px">Payment by bank transfer or GCash. Please send proof of payment to our billing contact. Thank you for your business.</p></div>`;
   modal(bill?'Bill now · '+t.label:'Statement of account',body,`<button class="btn" data-act="close">Close</button><a class="btn" href="${esc(mailto(p.email||'',`Statement of account ${'SOA-'+p.code.slice(3)+'-'+(i+1)}: ${p.name}`,`Dear ${p.contact||p.client},\n\nPlease find your statement of account for ${p.name} (${p.code}).\n\nAmount due: ${peso(sum(p.terms.filter((x,j)=>x.billed||j==i),x=>x.amount-x.paid))}\n\nPayment by bank transfer, GCash or check payable to J&A Electrical Installation Services. Please send proof of payment to ${JA_EMAIL}.\n\nThank you,\n${CO.rep}\n${CO.name}\n${CO.phone}`,JA_EMAIL))}">Email statement</a>${bill?`<button class="btn primary" data-act="dobill" data-p="${pid}" data-i="${i}">Mark as billed &amp; send SOA</button>`:`<button class="btn primary" data-act="remind" data-p="${pid}" data-i="${i}">Send this SOA to client</button>`}`)}
-function payModal(pid,i){const p=P(pid),t=p.terms[i];const bal=t.amount-t.paid;
-  modal('Record payment',`<p><b>${esc(p.client)}</b> · ${esc(t.label)} · balance <b>${peso(bal)}</b></p><div class="fgrid"><label class="f">Amount received<input id="payAmt" type="number" min="1" max="${bal}" value="${bal}"></label><label class="f">Date<input id="payDate" type="date" value="${D(0)}"></label><label class="f">Method<select id="payMethod"><option>Bank transfer</option><option>GCash</option><option>Check</option><option>Cash</option></select></label><label class="f">Reference no.<input id="payRef" placeholder="e.g. BDO-882301"></label></div><p id="payErr" style="color:var(--bad);font-size:13px" hidden></p>`,`<button class="btn" data-act="close">Cancel</button><button class="btn primary" data-act="dopay" data-p="${pid}" data-i="${i}">Save payment</button>`)}
+function payModal(pid,i,pre){pre=pre||{};const p=P(pid),t=p.terms[i];const bal=t.amount-t.paid;
+  modal('Record payment',`<p><b>${esc(p.client)}</b> · ${esc(t.label)} · balance <b>${peso(bal)}</b></p><div class="fgrid">${pre.proof?`<p class="muted" style="font-size:13px">From the client's uploaded proof. Check it matches your bank or GCash before saving.</p>`:''}<label class="f">Amount received<input id="payAmt" type="number" min="1" max="${bal}" value="${pre.amount||bal}"></label><label class="f">Date<input id="payDate" type="date" value="${esc(pre.date||D(0))}"></label><label class="f">Method<select id="payMethod">${['Bank transfer','GCash','Check','Cash'].map(m=>`<option ${m===pre.method?'selected':''}>${m}</option>`).join('')}</select></label><label class="f">Reference no.<input id="payRef" value="${esc(pre.ref||'')}" placeholder="e.g. BDO-882301"></label></div><p id="payErr" style="color:var(--bad);font-size:13px" hidden></p>`,`<button class="btn" data-act="close">Cancel</button><button class="btn primary" data-act="dopay" data-p="${pid}" data-i="${i}" data-proof="${esc(pre.proof||'')}">Save payment</button>`)}
 
 /* ---------- WORKFORCE ---------- */
 function vWorkforce(){const wd=weekDates();const runs=S.payroll;
@@ -1496,7 +1546,7 @@ function renderPortal(){const c=S.session.client;const ps=S.projects.filter(p=>p
    <div class="cols"><div class="panel"><header><h3>Site reports</h3></header>${reportList(p.reports,p,true)}</div>
     <div class="panel"><header><h3>Drawings for approval</h3></header><div class="list">${p.docs.map((d,i)=>`<div><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center"><span>${esc(d.name)} <span class="mono muted">rev ${esc(d.rev)}</span></span>${d.status==='approved'?pill('good','Approved'):d.status==='revise'?pill('bad','Revision requested'):`<span class="acts"><button class="btn xs" data-act="docrev" data-p="${p.id}" data-i="${i}">Request changes</button><button class="btn xs primary" data-act="docok" data-p="${p.id}" data-i="${i}">Approve</button></span>`}</div></div>`).join('')}</div></div></div>
    <div class="panel"><header><h3>Your contract</h3>${pill(...(C_STATUS[contractOf(p).status]||C_STATUS.draft))}</header><div class="pad" style="display:grid;gap:12px"><p class="muted" style="font-size:14px">Contract no. ${esc(contractOf(p).no)}. Review it, then print, sign and return it to your project manager.</p><div class="ctr-acts"><button class="btn primary" data-act="cprint" data-p="${p.id}">Print contract</button><button class="btn" data-act="cpdf" data-p="${p.id}">Download PDF</button></div><details class="ctr-view"><summary>Read the contract here</summary><div class="paper-wrap">${contractHTML(p)}</div></details></div></div>
-   <div class="panel"><header><h3>Billing</h3></header><div class="tbl"><table class="t"><thead><tr><th>Term</th><th>Status</th><th>Due</th><th class="r">Amount</th><th class="r">Paid</th><th class="r">Balance</th></tr></thead><tbody>${termRows(p,false)}</tbody></table></div><p class="pad muted" style="font-size:13px">Pay by bank transfer or GCash using the details on your statement of account, then send proof of payment to your project manager.</p></div>
+   <div class="panel"><header><h3>Billing</h3></header><div class="tbl"><table class="t"><thead><tr><th>Term</th><th>Status</th><th>Due</th><th class="r">Amount</th><th class="r">Paid</th><th class="r">Balance</th><th></th></tr></thead><tbody>${portalTermRows(p)}</tbody></table></div><p class="pad muted" style="font-size:13px">Pay by bank transfer or GCash using the details on your statement of account, then tap <b>Upload proof of payment</b> and add a photo of your receipt.</p></div>
    <div class="cols even">
     <form class="panel" data-form="request" data-p="${p.id}"><header><h3>Request service</h3></header><div class="pad" style="display:grid;gap:12px"><label class="f">What's the problem?<textarea id="srText" required placeholder="e.g. Breaker for the kitchen keeps tripping"></textarea></label><button class="btn primary" type="submit">Send request</button><div id="sr-sent" class="sent-box" hidden></div></div></form>
     <form class="panel" data-form="feedback" data-p="${p.id}"><header><h3>Rate our work</h3></header><div class="pad" style="display:grid;gap:12px"><div class="starpick" role="radiogroup" aria-label="Rating">${[1,2,3,4,5].map(n=>`<button type="button" class="${n<=UI.ratePick?'on':''}" data-act="star" data-n="${n}" aria-label="${n} star">★</button>`).join('')}</div><label class="f">Comments<textarea id="fbText" placeholder="How is the crew doing?"></textarea></label><button class="btn primary" type="submit">Submit feedback</button></div></form>
@@ -1553,18 +1603,54 @@ const A={
   estdel:(d,el)=>{const tb=document.querySelector('#estT tbody');if(tb.children.length<=1){toast('An estimate needs at least one item');return}el.closest('tr').remove();estCalc()},
   estsave:d=>{const l=S.leads.find(x=>x.id===d.id);l.est={rows:estRows().filter(r=>r[0]||r[1]*r[2]),mk:+$('#emk').value||0,vat:+$('#evat').value};l.value=+$('#etot').dataset.total||0;if(l.stage==='discovery'){l.stage='proposal';l.next='Send quotation to client'}save();closeModal();rerender();toast('Estimate saved: '+peso(l.value))},
   convert:d=>{const l=S.leads.find(x=>x.id===d.id);if(!l.value){toast('Add an estimate first');return}
-    newProjectModal({client:l.name,contact:l.contact,phone:l.phone,name:l.service,site:l.city,type:l.type,value:l.value,lead:l.id})},
+    newProjectModal({client:l.name,contact:l.contact,phone:l.phone,email:l.email||'',name:l.service,site:l.city,type:l.type,value:(l.quote&&l.quote.total)||l.value,lead:l.id,terms:(l.quote&&l.quote.termsKey)||'std'})},
   newproj:()=>newProjectModal(),
   npsave:d=>npSave(d.lead),
   newlead:()=>newLeadModal(),
   nlsave:()=>{const g=id=>$('#'+id).value.trim();if(!g('nlName')||!g('nlPhone')||!g('nlSvc')){const e=$('#nlErr');e.textContent='Please add the client name, phone and what they need.';e.hidden=false;return}
-    S.leads.unshift({id:uid('l'),name:g('nlName'),contact:g('nlContact')||g('nlName'),phone:g('nlPhone'),type:g('nlType'),city:g('nlCity')||'—',service:g('nlSvc'),value:0,stage:'discovery',next:'Schedule ocular inspection',source:g('nlSrc')});save();closeModal();rerender();toast('Lead added to Discovery')},
+    S.leads.unshift({id:uid('l'),name:g('nlName'),contact:g('nlContact')||g('nlName'),phone:g('nlPhone'),email:g('nlEmail').toLowerCase(),type:g('nlType'),city:g('nlCity')||'—',service:g('nlSvc'),value:0,stage:'discovery',next:'Schedule ocular inspection',source:g('nlSrc')});save();closeModal();rerender();toast('Lead added to Discovery')},
   advance:d=>{const p=P(d.p);if(p.stage>=11)return;p.stage++;
     if(p.stage===9){p.completed=D(0);p.tasks.forEach(t=>t.progress=100)}
     if(p.stage===10){const f=p.terms.find(t=>t.label==='Final billing');if(f&&!f.billed)f.ready=true;if(!p.completed)p.completed=D(0)}
     if(p.stage===11){p.warrantyEnd=D(365);[90,180,270].forEach(n=>S.pm.push({id:uid('m'),pid:p.id,date:D(n),type:'Quarterly PMS',done:false}))}
     if(p.stage===7){const pr=p.terms.find(t=>t.label==='Progress billing');}
     save();rerender();toast(`${p.code} moved to ${STEPS[p.stage]}`)},
+  qsend:d=>quoteModal(d.id),
+  qdo:d=>{const l=S.leads.find(x=>x.id===d.id);if(!l)return;const err=$('#qErr');const fail=m=>{err.textContent=m;err.hidden=false};
+    const em=$('#qEmail').value.trim().toLowerCase();if(!okEmail(em))return fail("Please enter the client's email address.");
+    const q=quoteLines(l);if(!q.rows.length||!(q.total>0))return fail('The estimate has no priced items yet. Open Estimate first.');
+    const key=$('#qTerms').value,n=+$('#qValid').value||30;
+    l.email=em;l.value=q.total;
+    l.quote=Object.assign({no:(l.quote&&l.quote.no)||quoteNo(l),token:quoteToken(),date:D(0),validUntil:D(n),termsKey:key,termsLabel:(TERM_PRESETS[key]||TERM_PRESETS.std)[0],terms:termsFor(key,q.total),notes:$('#qNotes').value.trim().slice(0,1000),status:'sent',sentAt:D(0),sendReq:Date.now()},q);
+    if(l.stage==='discovery'||l.stage==='proposal')l.stage='negotiation';l.next='Waiting for the client to accept the quotation online';
+    save();closeModal();rerender();toast('Quotation emailed to '+em)},
+  pinvite:d=>{const p=P(d.p);if(!p||!can('edit'))return;const em=(p.invite&&p.invite.email)||p.email||'';
+    modal(p.invite?'Resend portal invite':'Invite client to portal',`<p>${esc(p.client)} · ${esc(p.name)}</p><p class="muted" style="font-size:13.5px;margin-top:8px">We email the client a link to the client portal. When they create an account with this email address, they see this project straight away. No approval needed.</p><label class="f" style="margin-top:12px">Client email *<input id="piEmail" type="email" value="${esc(em)}" placeholder="client@email.com"></label><p id="piErr" style="color:var(--bad);font-size:13.5px" hidden></p>`,
+    `<button class="btn" data-act="close">Cancel</button><button class="btn primary" data-act="pinvdo" data-p="${p.id}">Send invite</button>`)},
+  pinvdo:d=>{const p=P(d.p);const em=$('#piEmail').value.trim().toLowerCase();if(!okEmail(em)){const e=$('#piErr');e.textContent='Please enter a valid email address.';e.hidden=false;return}
+    p.email=p.email||em;p.invite={email:em,req:Date.now(),sentAt:D(0)};save();closeModal();rerender();toast('Portal invite emailed to '+em)},
+  proofup:d=>{const p=P(d.p),t=p&&p.terms[+d.i];if(!t)return;const bal=Math.max(0,t.amount-t.paid);
+    modal('Upload proof of payment',`<p><b>${esc(t.label)}</b> · ${esc(p.name)} · balance <b>${peso(bal)}</b></p>
+    <div class="fgrid"><label class="f">Amount paid (₱) *<input id="pfAmt" type="number" min="1" step="any" value="${bal}"></label><label class="f">Date paid *<input id="pfDate" type="date" value="${D(0)}"></label>
+    <label class="f">Paid by<select id="pfMethod"><option>GCash</option><option>Bank transfer</option><option>Check</option><option>Cash deposit</option></select></label><label class="f">Reference no.<input id="pfRef" placeholder="e.g. 1234 567 890"></label></div>
+    <label class="f">Photo or PDF of your receipt *<input id="pfFile" type="file" accept="image/*,.pdf"></label>
+    <p class="muted" style="font-size:13px">J&amp;A checks it against their bank or GCash, then marks the payment as received here.</p>
+    <p id="pfErr" style="color:var(--bad);font-size:13.5px" hidden></p>`,`<button class="btn" data-act="close">Cancel</button><button class="btn primary" data-act="proofsave" data-p="${p.id}" data-i="${d.i}">Send to J&amp;A</button>`)},
+  proofsave:async(d,el)=>{const p=P(d.p),t=p&&p.terms[+d.i];if(!t)return;const err=$('#pfErr');const fail=m=>{err.textContent=m;err.hidden=false;if(el)el.disabled=false};
+    const amt=+$('#pfAmt').value,f=$('#pfFile').files[0];
+    if(!(amt>0))return fail('Enter the amount you paid.');if(!$('#pfDate').value)return fail('Enter the date you paid.');if(!f)return fail('Add a photo or PDF of your receipt.');
+    if(el){el.disabled=true;el.textContent='Sending…'}let file;try{file=await readProof(f)}catch(e){return fail(e.message)}
+    (S.proofs=S.proofs||[]).push({id:uid('pf'),pid:p.id,termId:t.id,term:t.label,project:p.name,code:p.code,by:S.session.client||p.client,amount:Math.round(amt),date:$('#pfDate').value,method:$('#pfMethod').value,ref:$('#pfRef').value.trim().slice(0,60),status:'pending',at:D(0),file});
+    save();closeModal();renderPortal();toast('Proof of payment sent to J&A. Thank you!')},
+  proofview:async d=>{const x=(S.proofs||[]).find(y=>y.id===d.id);if(!x)return;modal('Receipt from '+x.by,'<p class="muted">Loading the receipt…</p>','<button class="btn" data-act="close">Close</button>');
+    let f=x.file;try{if(!f&&window.JA_PROOF_FILE)f=await window.JA_PROOF_FILE(x.id)}catch(e){}
+    const b=$('#modalCard .mbody');if(!b)return;if(!f||!SAFE_FILE.test(f.data||'')){b.innerHTML='<p>The receipt could not be loaded. Ask the client to upload it again.</p>';return}
+    b.innerHTML=`<p><b>${peso(x.amount)}</b> · ${esc(x.method)}${x.ref?' · ref <span class="mono">'+esc(x.ref)+'</span>':''} · paid ${fmtD(x.date)}<br><span class="muted">${esc(x.code)} · ${esc(x.term)}</span></p>`+(f.type==='application/pdf'?`<p style="margin-top:12px"><a class="btn" href="${f.data}" download="${esc(f.name||'receipt.pdf')}">Download the PDF receipt</a></p>`:`<img src="${f.data}" alt="Receipt from ${esc(x.by)}" style="display:block;max-width:100%;margin-top:12px;border-radius:8px;border:1px solid var(--line)">`)},
+  proofok:d=>{const x=(S.proofs||[]).find(y=>y.id===d.id);const p=x&&P(x.pid);const i=p?p.terms.findIndex(t=>t.id===x.termId):-1;if(i<0){toast('That billing no longer exists');return}
+    const t=p.terms[i];payModal(p.id,i,{amount:Math.min(x.amount,t.amount-t.paid),date:x.date,method:x.method==='Cash deposit'?'Cash':x.method,ref:x.ref,proof:x.id})},
+  proofno:d=>{const x=(S.proofs||[]).find(y=>y.id===d.id);if(!x)return;modal('Payment not received?',`<p>${esc(x.by)} · ${peso(x.amount)} · ${esc(x.method)}${x.ref?' · ref '+esc(x.ref):''}</p><label class="f" style="margin-top:12px">Tell the client why (they see this in their portal)<input id="pnReason" value="We could not find this payment yet" maxlength="140"></label>`,
+    `<button class="btn" data-act="close">Cancel</button><button class="btn primary" data-act="proofnodo" data-id="${x.id}">Mark as not received</button>`)},
+  proofnodo:d=>{const x=(S.proofs||[]).find(y=>y.id===d.id);if(!x)return;x.status='rejected';x.reason=$('#pnReason').value.trim().slice(0,140);x.checkedAt=D(0);save();closeModal();rerender();toast('The client will see that this payment was not matched')},
   pdelask:d=>{const p=P(d.p);if(!p||S.session.role!=='owner')return;modal('Delete this project?',`<p><b>${esc(p.code)} · ${esc(p.name)}</b><br><span class="muted">Client: ${esc(p.client||'—')} · ${esc(p.site||'')}</span></p><p style="margin-top:12px">This permanently removes the project and everything in it: tasks, site reports, materials, drawings, the contract and all billing, payments and statements. The client will no longer see it in their portal.</p><p style="margin-top:12px;color:var(--bad)"><b>This cannot be undone.</b></p>`,`<button class="btn" data-act="close">Cancel</button><button class="btn primary" data-act="pdel" data-p="${p.id}" style="background:var(--bad);border-color:var(--bad);color:#fff">Delete permanently</button>`)},
   pdel:d=>{const p=P(d.p);if(!p||S.session.role!=='owner')return;const name=p.code+' · '+p.name;S.projects=S.projects.filter(x=>x.id!==p.id);['requests','feedback'].forEach(c=>{if(Array.isArray(S[c]))S[c]=S[c].filter(x=>x.pid!==p.id)});save();closeModal();go('projects');toast(name+' was deleted')},
   ldelask:d=>{const l=S.leads.find(x=>x.id===d.id);if(!l||S.session.role!=='owner')return;modal('Delete this lead?',`<p><b>${esc(l.name)}</b><br><span class="muted">${esc(l.contact||'')} · ${esc(l.phone||'')} · ${esc(l.source||'')}</span></p><p style="margin-top:12px">The lead and its estimate are removed from Sales &amp; quotes. Website requests stay in the Google Sheet.</p><p style="margin-top:12px;color:var(--bad)"><b>This cannot be undone.</b></p>`,`<button class="btn" data-act="close">Cancel</button><button class="btn primary" data-act="ldel" data-id="${l.id}" style="background:var(--bad);border-color:var(--bad);color:#fff">Delete permanently</button>`)},
@@ -1577,6 +1663,7 @@ const A={
   dopay:d=>{const p=P(d.p),t=p.terms[+d.i];const amt=+$('#payAmt').value;const bal=t.amount-t.paid;if(!(amt>0)||amt>bal){const e=$('#payErr');e.textContent=`Enter an amount between ₱1 and ${peso(bal)}.`;e.hidden=false;return}
     t.paid+=amt;if($('#payDate').value.slice(0,7)===D(0).slice(0,7))S.months[5].collected+=amt;S.remindLog.push({date:$('#payDate').value,text:`Payment received from ${p.client}: ${peso(amt)} via ${$('#payMethod').value}${$('#payRef').value?' ('+$('#payRef').value+')':''}`});
     if(p.stage===4&&t.label==='Downpayment'&&t.paid>=t.amount)p.stage=5;
+    if(d.proof){const x=(S.proofs||[]).find(y=>y.id===d.proof);if(x){x.status='confirmed';x.confirmedAt=D(0)}}
     save();closeModal();rerender();toast('Payment recorded: '+peso(amt))},
   review:d=>{const r=P(d.p).reports.find(x=>x.id===d.r);r.reviewed=true;save();rerender();toast('Report marked reviewed')},
   deliver:d=>{const p=P(d.p),b=p.bom[+d.i];modal('Log delivery',`<p>${esc(b.item)} · ${b.delivered} of ${b.planned} ${esc(b.unit)} delivered</p><label class="f">Quantity received on site<input id="delQty" type="number" min="1" value="${Math.max(1,b.planned-b.delivered)}"></label>`,`<button class="btn" data-act="close">Cancel</button><button class="btn primary" data-act="dodeliver" data-p="${d.p}" data-i="${d.i}">Save delivery</button>`)},
@@ -1618,7 +1705,7 @@ document.addEventListener('input',e=>{const t=e.target;
   if(t.id==='npValue')npPreview();
   if(t.matches('[data-task]')){const p=P(t.dataset.p);p.tasks[+t.dataset.task].progress=+t.value;$('#tpv'+t.dataset.task).textContent=t.value+'%';save()}
 });
-document.addEventListener('change',e=>{const t=e.target;
+document.addEventListener('change',e=>{const t=e.target;if(['qTerms','qValid','qNotes'].includes(t.id)){qPreview();return}
   if(t.id==='roleSwitch'){S.session.role=t.value;save();const nav=ROLES[t.value].nav;const h=OFFICE_ROUTE.get().slice(1);if(h.startsWith('project-')&&nav.includes('projects'))rerender();else go(nav.includes(h)?h:nav[0])}
   else if(t.matches('[data-task]'))rerender();
   else if(t.id==='npTerms')npPreview();
@@ -1672,12 +1759,13 @@ window.addEventListener('hashchange',()=>setTimeout(syncTop,0));
 const cfg=window.JA_LIVE;
 const sb=window.supabase.createClient(cfg.url,cfg.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 window.JA_SB=sb;
+window.JA_PROOF_FILE=async id=>{const {data,error}=await sb.from('records').select('data').eq('coll','proofFiles').eq('id',id).single();if(error)throw error;return data&&data.data};
 
-const LIST=['projects','leads','emps','pm','requests','feedback','reviews'];
+const LIST=['projects','leads','emps','pm','requests','feedback','reviews','proofs'];
 const BLOB=['att','payroll','months','remindLog','settings'];
 const FIN=['value','terms','contract'];
-const WRITE={owner:'*',pm:['projects','finance','leads','pm','requests','feedback','reviews','remindLog','settings'],
-  finance:['finance','emps','att','payroll','months','remindLog','settings'],engineer:['projects'],client:['projects','requests','feedback']};
+const WRITE={owner:'*',pm:['projects','finance','leads','pm','requests','feedback','reviews','remindLog','settings','proofs'],
+  finance:['finance','emps','att','payroll','months','remindLog','settings','proofs'],engineer:['projects'],client:['projects','requests','feedback','proofs','proofFiles']};
 const DEL={owner:'*',pm:'*',finance:['emps','payroll']};
 const may=(t,c)=>{const r=ME&&(ME.role||'');const x=t[r];return x==='*'||(Array.isArray(x)&&x.includes(c))};
 
@@ -1690,12 +1778,12 @@ function monthsFrom(old){
     out.push({key,m:d.toLocaleDateString('en-GB',{month:'short'}),billed:o.billed||0,collected:o.collected||0})}
   return out;
 }
-function empty(){return {projects:[],leads:[],emps:[],att:{},months:monthsFrom([]),payroll:[],pm:[],requests:[],feedback:[],reviews:[],remindLog:[],
+function empty(){return {projects:[],leads:[],proofs:[],emps:[],att:{},months:monthsFrom([]),payroll:[],pm:[],requests:[],feedback:[],reviews:[],remindLog:[],
   settings:{autoRemind:true,clientEmails:true},session:{role:null,client:null}}}
 
 /* ---------- read everything this person is allowed to see ---------- */
 async function pull(){
-  const {data,error}=await sb.from('records').select('coll,id,pid,data');
+  const {data,error}=await sb.from('records').select('coll,id,pid,data').neq('coll','proofFiles');
   if(error)throw error;
   const st=empty();st.session=S.session;snap={};const fin={};
   for(const r of data){snap[r.coll+'/'+r.id]=JSON.stringify(r.data);
@@ -1714,7 +1802,10 @@ function rows(){
   const stamp=(c,x)=>{if(!x.id)x.id=uid(c.slice(0,2));if(!snap[c+'/'+x.id]&&!x._t)x._t=now;};
   S.projects.forEach(p=>{stamp('projects',p);const d={...p},f={};FIN.forEach(k=>{if(k in d){f[k]=d[k];delete d[k]}});
     out['projects/'+p.id]={coll:'projects',id:p.id,pid:p.id,data:d};out['finance/'+p.id]={coll:'finance',id:p.id,pid:p.id,data:f};});
-  LIST.filter(c=>c!=='projects').forEach(c=>(S[c]||[]).forEach(x=>{stamp(c,x);out[c+'/'+x.id]={coll:c,id:x.id,pid:x.pid||null,data:x};}));
+  LIST.filter(c=>c!=='projects').forEach(c=>(S[c]||[]).forEach(x=>{stamp(c,x);
+    if(c==='proofs'){const d={...x},file=d.file;delete d.file;out['proofs/'+x.id]={coll:c,id:x.id,pid:x.pid||null,data:d};
+      if(file)out['proofFiles/'+x.id]={coll:'proofFiles',id:x.id,pid:x.pid||null,data:file};return}
+    out[c+'/'+x.id]={coll:c,id:x.id,pid:x.pid||null,data:x};}));
   BLOB.forEach(c=>{out[c+'/main']={coll:c,id:'main',pid:null,data:S[c]};});
   return out;
 }
@@ -1738,9 +1829,10 @@ async function push(){
     if(adds.length){const {error}=await sb.from('records').insert(adds);if(error)throw error;}
     for(const r of changes){const {error}=await sb.from('records').update({data:r.data,pid:r.pid}).eq('coll',r.coll).eq('id',r.id);if(error)throw error;}
     for(const d of dels){const {error}=await sb.from('records').delete().eq('coll',d.c).eq('id',d.id);if(error)throw error;
-      if(d.c==='projects'){await sb.from('records').delete().eq('coll','finance').eq('id',d.id)}}
+      if(d.c==='projects'){await sb.from('records').delete().eq('coll','finance').eq('id',d.id)}
+      if(d.c==='proofs'){await sb.from('records').delete().eq('coll','proofFiles').eq('id',d.id)}}
     adds.concat(changes).forEach(r=>snap[r.coll+'/'+r.id]=JSON.stringify(r.data));
-    dels.forEach(d=>{delete snap[d.c+'/'+d.id];if(d.c==='projects')delete snap['finance/'+d.id]});
+    dels.forEach(d=>{delete snap[d.c+'/'+d.id];if(d.c==='projects')delete snap['finance/'+d.id];if(d.c==='proofs')delete snap['proofFiles/'+d.id]});
     status('Saved');setTimeout(()=>{const el=document.getElementById('liveStatus');if(el&&el.textContent==='Saved')status('')},1500);
   }catch(e){
     status('Not saved: '+(e.message||e),true);
